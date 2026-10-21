@@ -198,7 +198,7 @@ public class AnimationService
                 double norm = Math.Clamp(Math.Sqrt(movement.VelocityX * movement.VelocityX
                     + movement.VelocityY * movement.VelocityY) / 700, 0, 1);
                 return new AnimationPose(
-                    Rotation: 10 + 15 * norm, // чем быстрее, тем сильнее наклон вперёд
+                    Rotation: 10 + 12 * norm, // чем быстрее, тем сильнее наклон вперёд (10–22°, больше упирается клювом в край холста)
                     HeadRotation: -8,
                     WingScaleY: 0.9 + 0.45 * s,
                     WingRotation: 22 * s,

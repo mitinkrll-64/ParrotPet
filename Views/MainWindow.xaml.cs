@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using ParrotPet.Models;
 using ParrotPet.ViewModels;
 
 namespace ParrotPet.Views;
@@ -10,11 +9,6 @@ namespace ParrotPet.Views;
 /// <summary>Прозрачное окно-оверлей с попугаем: рендер кадров и перетаскивание мышью.</summary>
 public partial class MainWindow : Window
 {
-    private static readonly Brush CereMale = Freeze(new SolidColorBrush(Color.FromRgb(0x2E, 0x86, 0xFF)));
-    private static readonly Brush NostrilMale = Freeze(new SolidColorBrush(Color.FromRgb(0x1B, 0x4F, 0xB0)));
-    private static readonly Brush CereFemale = Freeze(new SolidColorBrush(Color.FromRgb(0xC9, 0xA2, 0x7A)));
-    private static readonly Brush NostrilFemale = Freeze(new SolidColorBrush(Color.FromRgb(0x7A, 0x5A, 0x3A)));
-
     private TimeSpan _lastRender;
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -22,37 +16,37 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Loaded += OnLoaded;
-        Closed += (_, _) =>
-        {
-            CompositionTarget.Rendering -= OnRendering;
-            if (ViewModel is not null) ViewModel.Profile.Changed -= ApplyGender;
-        };
+        Closed += (_, _) => CompositionTarget.Rendering -= OnRendering;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ViewModel?.Start();
-        if (ViewModel is not null) ViewModel.Profile.Changed += ApplyGender;
-        ApplyGender();
         ApplyPosition();
         CompositionTarget.Rendering += OnRendering; // синхронно с частотой экрана
     }
 
-    private static Brush Freeze(Brush brush)
-    {
-        brush.Freeze();
-        return brush;
-    }
-
-    /// <summary>Цвет восковицы по полу: самец — синяя, самка — бежево-коричневая.</summary>
-    private void ApplyGender()
+    /// <summary>Правый клик по попугаю: карточка с именем, полом, возрастом и сытостью.</summary>
+    private void PetMenu_Opened(object sender, RoutedEventArgs e)
     {
         if (ViewModel is null) return;
-        bool male = ViewModel.Profile.Gender == PetGender.Male;
-        Cere.Fill = male ? CereMale : CereFemale;
-        Nostril.Fill = male ? NostrilMale : NostrilFemale;
+        var p = ViewModel.Profile;
+        MenuName.Text = p.Name;
+        MenuGender.Text = p.Gender == Models.PetGender.Male ? "Пол: самец ♂" : "Пол: самка ♀";
+        MenuAge.Text = $"Возраст: {p.AgeDays} {DaysWord(p.AgeDays)}";
+        MenuHunger.Value = p.Hunger;
+        MenuHungerText.Text = $"{p.Hunger:0} / 100";
     }
 
+    private static string DaysWord(int n)
+    {
+        int last = n % 100 is >= 11 and <= 14 ? 0 : n % 10;
+        return last == 1 ? "день" : last is >= 2 and <= 4 ? "дня" : "дней";
+    }
+
+    private void MenuFeed_Click(object sender, RoutedEventArgs e) => ViewModel?.Feed();
+
+    private void MenuSettings_Click(object sender, RoutedEventArgs e) => ViewModel?.RequestSettings();
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.F12) ViewModel?.ToggleDebug();

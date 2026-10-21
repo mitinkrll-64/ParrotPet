@@ -58,6 +58,7 @@ public partial class App : Application
 
         // Debug-окно: пункт меню, глобальный Ctrl+Shift+D и F12 (когда окно питомца или Debug в фокусе)
         viewModel.DebugToggleRequested += ToggleDebug;
+        viewModel.SettingsRequested += ShowSettings;
         _hotkey = new HotkeyService(() => viewModel.ToggleDebug());
     }
 

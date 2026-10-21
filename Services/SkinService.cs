@@ -69,6 +69,7 @@ public class SkinService
     };
 
     private readonly PetProfile _profile;
+    private PetGender _gender;
 
     public SkinService(PetProfile profile)
     {
@@ -95,43 +96,33 @@ public class SkinService
         var skin = All.FirstOrDefault(s => s.Id == skinId);
         if (skin is null || !skin.IsUnlocked) return false;
 
-        var resources = (Application.Current ?? throw new InvalidOperationException("Нет Application")).Resources;
-        resources["Skin.BodyGradient"] = Gradient(skin.ColorBody, skin.ColorBodyShade);
-        resources["Skin.Head"] = Brush(skin.ColorHead);
-        resources["Skin.Stripes"] = Brush(skin.ColorStripes);
-        resources["Skin.Wing"] = Brush(skin.ColorWing);
-        resources["Skin.WingStripes"] = Brush(skin.ColorWingStripes);
-        resources["Skin.Beak"] = Brush(skin.ColorBeak);
-        resources["Skin.Cheek"] = Brush(skin.ColorCheeks);
-        resources["Skin.Cheek2"] = Brush(skin.ColorCheeks2);
-        resources["Skin.Tail1"] = Brush(skin.ColorTail1);
-        resources["Skin.Tail2"] = Brush(skin.ColorTail2);
-        resources["Skin.Tail3"] = Brush(skin.ColorTail3);
-        resources["Skin.Feet"] = Brush(skin.ColorFeet);
-
         Active = skin;
+        ApplyResources();
         _profile.ActiveSkinId = skin.Id; // сохранится вместе с профилем в save_data.json
         return true;
     }
 
+    /// <summary>Перерисовывает слои спрайта под активный скин и пол (восковица зависит от пола).</summary>
+    private void ApplyResources()
+    {
+        var resources = (Application.Current ?? throw new InvalidOperationException("Нет Application")).Resources;
+        var images = PixelSpriteBuilder.Build(Active, _profile.Gender);
+        resources["Skin.TailImage"] = images.Tail;
+        resources["Skin.BodyImage"] = images.Body;
+        resources["Skin.WingImage"] = images.Wing;
+        resources["Skin.HeadImage"] = images.Head;
+        _gender = _profile.Gender;
+    }
+
     private void OnProfileChanged()
     {
-        if (_profile.ActiveSkinId != Active.Id && !ApplySkin(_profile.ActiveSkinId))
-            ApplySkin(DefaultSkinId);
-    }
-
-    private static SolidColorBrush Brush(string hex)
-    {
-        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
-        brush.Freeze();
-        return brush;
-    }
-
-    private static LinearGradientBrush Gradient(string top, string bottom)
-    {
-        var brush = new LinearGradientBrush((Color)ColorConverter.ConvertFromString(top),
-            (Color)ColorConverter.ConvertFromString(bottom), new Point(0, 0), new Point(0, 1));
-        brush.Freeze();
-        return brush;
+        if (_profile.ActiveSkinId != Active.Id)
+        {
+            if (!ApplySkin(_profile.ActiveSkinId)) ApplySkin(DefaultSkinId);
+        }
+        else if (_profile.Gender != _gender)
+        {
+            ApplyResources(); // пол сменился — только восковица на голове
+        }
     }
 }

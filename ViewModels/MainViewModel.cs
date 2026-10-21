@@ -21,6 +21,9 @@ public class MainViewModel
     /// <summary>Вызывается при смене видимости; true — показать окно.</summary>
     public event Action<bool>? VisibilityChanged;
 
+    /// <summary>Запрос открыть окно настроек (меню попугая, трей).</summary>
+    public event Action? SettingsRequested;
+
     /// <summary>Запрос открыть/закрыть Debug-окно (меню, хоткей, F12).</summary>
     public event Action? DebugToggleRequested;
 
@@ -133,6 +136,8 @@ public class MainViewModel
         _state.IsVisible = !_state.IsVisible;
         VisibilityChanged?.Invoke(_state.IsVisible);
     }
+
+    public void RequestSettings() => SettingsRequested?.Invoke();
 
     public void ToggleDebug() => DebugToggleRequested?.Invoke();
 }
