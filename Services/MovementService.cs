@@ -134,6 +134,38 @@ public class MovementService
         else if (State == PetBehaviorState.Fly) Fall();
     }
 
+    /// <summary>
+    /// Принудительно прерывает любое действие (отладка): сбрасывает флаги кормления
+    /// и сажает попугая на землю в Idle. Дальше FSM работает как обычно.
+    /// </summary>
+    public void Interrupt()
+    {
+        _goingToFood = false;
+        _eatingFood = false;
+        _velocityY = 0;
+        State = PetBehaviorState.Idle;
+        X = Math.Clamp(X, MinX, MaxX);
+        Y = GroundY;
+    }
+
+    /// <summary>Поднимает попугая над землёй и роняет (отладка падения).</summary>
+    public void ForceFall()
+    {
+        Interrupt();
+        Y = Math.Max(Bounds.Top, GroundY - 220);
+        Fall();
+    }
+
+    /// <summary>Переносит попугая в центр области перемещения; оттуда он падает на землю.</summary>
+    public void TeleportToCenter()
+    {
+        Interrupt();
+        var b = Bounds;
+        X = b.Left + (b.Width - Size) / 2;
+        Y = b.Top + (b.Height - Size) / 2;
+        Fall();
+    }
+
     /// <summary>Идти на deltaX пикселей (знак задаёт направление).</summary>
     public void StartWalk(double deltaX)
     {

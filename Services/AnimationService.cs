@@ -26,6 +26,7 @@ public class AnimationService
     private double _nextHeadTurn, _headTarget, _headCurrent;
     private double _nextPreen, _preenTime = -1;
     private double _heartTime = -1;
+    private bool _preenRequested;
     private double _landTime = 99, _landAmplitude;
 
     public AnimationService()
@@ -46,6 +47,9 @@ public class AnimationService
         _landAmplitude = Math.Min(1, impactSpeed / 1000);
         _landTime = 0;
     }
+
+    /// <summary>Запустить чистку пёрышек (сработает, когда попугай в состоянии Idle).</summary>
+    public void RequestPreen() => _preenRequested = true;
 
     /// <summary>Над попугаем появляется сердечко.</summary>
     public void TriggerHeart() => _heartTime = 0;
@@ -138,9 +142,10 @@ public class AnimationService
         double head = _headCurrent, wingRot = 0, wingScale = 1;
 
         _nextPreen -= dt;
-        if (_preenTime < 0 && _nextPreen <= 0)
+        if (_preenTime < 0 && (_nextPreen <= 0 || _preenRequested))
         {
             _preenTime = 0;
+            _preenRequested = false;
             _nextPreen = Range(6, 12);
         }
         if (_preenTime >= 0)

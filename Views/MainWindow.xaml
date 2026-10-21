@@ -10,6 +10,7 @@
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         ClipToBounds="False"
+        KeyDown="Window_KeyDown"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         MouseMove="Window_MouseMove"
         MouseLeftButtonUp="Window_MouseLeftButtonUp">
@@ -108,8 +109,8 @@
 
                         <!-- Изогнутый клюв и синяя восковица над ним -->
                         <Path Data="M48,21 C54,18 61,22 59.5,30 C58,27.5 54,26.5 50,27.5 Z" Fill="#F2B84B"/>
-                        <Ellipse Canvas.Left="46.5" Canvas.Top="18.5" Width="8" Height="6.5" Fill="#2E86FF"/>
-                        <Ellipse Canvas.Left="51" Canvas.Top="20.5" Width="1.6" Height="1.6" Fill="#1B4FB0"/>
+                        <Ellipse x:Name="Cere" Canvas.Left="46.5" Canvas.Top="18.5" Width="8" Height="6.5" Fill="#2E86FF"/>
+                        <Ellipse x:Name="Nostril" Canvas.Left="51" Canvas.Top="20.5" Width="1.6" Height="1.6" Fill="#1B4FB0"/>
 
                         <!-- Глаз (моргание масштабирует по Y) -->
                         <Canvas>

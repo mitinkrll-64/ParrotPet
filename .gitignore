@@ -41,3 +41,4 @@ Desktop.ini
 .claude/settings.local.json
 # Пользовательские настройки приложения
 settings.json
+save_data.json

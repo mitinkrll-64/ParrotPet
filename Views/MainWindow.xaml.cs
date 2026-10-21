@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ParrotPet.Models;
 using ParrotPet.ViewModels;
 
 namespace ParrotPet.Views;
@@ -9,6 +10,11 @@ namespace ParrotPet.Views;
 /// <summary>Прозрачное окно-оверлей с попугаем: рендер кадров и перетаскивание мышью.</summary>
 public partial class MainWindow : Window
 {
+    private static readonly Brush CereMale = Freeze(new SolidColorBrush(Color.FromRgb(0x2E, 0x86, 0xFF)));
+    private static readonly Brush NostrilMale = Freeze(new SolidColorBrush(Color.FromRgb(0x1B, 0x4F, 0xB0)));
+    private static readonly Brush CereFemale = Freeze(new SolidColorBrush(Color.FromRgb(0xC9, 0xA2, 0x7A)));
+    private static readonly Brush NostrilFemale = Freeze(new SolidColorBrush(Color.FromRgb(0x7A, 0x5A, 0x3A)));
+
     private TimeSpan _lastRender;
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -16,14 +22,40 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Loaded += OnLoaded;
-        Closed += (_, _) => CompositionTarget.Rendering -= OnRendering;
+        Closed += (_, _) =>
+        {
+            CompositionTarget.Rendering -= OnRendering;
+            if (ViewModel is not null) ViewModel.Profile.Changed -= ApplyGender;
+        };
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ViewModel?.Start();
+        if (ViewModel is not null) ViewModel.Profile.Changed += ApplyGender;
+        ApplyGender();
         ApplyPosition();
         CompositionTarget.Rendering += OnRendering; // синхронно с частотой экрана
+    }
+
+    private static Brush Freeze(Brush brush)
+    {
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>Цвет восковицы по полу: самец — синяя, самка — бежево-коричневая.</summary>
+    private void ApplyGender()
+    {
+        if (ViewModel is null) return;
+        bool male = ViewModel.Profile.Gender == PetGender.Male;
+        Cere.Fill = male ? CereMale : CereFemale;
+        Nostril.Fill = male ? NostrilMale : NostrilFemale;
+    }
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F12) ViewModel?.ToggleDebug();
     }
 
     private void OnRendering(object? sender, EventArgs e)

@@ -16,7 +16,27 @@ public class BehaviorController
         _timer.Tick += (_, _) => OnTick();
     }
 
-    public void Start() => ScheduleNext();
+    private bool _enabled = true;
+
+    /// <summary>Случайное поведение включено (в Debug-окне можно выключить).</summary>
+    public bool Enabled
+    {
+        get => _enabled;
+        set
+        {
+            _enabled = value;
+            if (value) ScheduleNext();
+            else _timer.Stop();
+        }
+    }
+
+    public void Start() => Reschedule();
+
+    /// <summary>Отсчитывает следующее случайное действие заново (после ручного вмешательства).</summary>
+    public void Reschedule()
+    {
+        if (_enabled) ScheduleNext();
+    }
 
     public void Stop() => _timer.Stop();
 

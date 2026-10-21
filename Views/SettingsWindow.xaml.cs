@@ -1,45 +1,43 @@
 ﻿using System.Windows;
-using System.Windows.Media;
-using Microsoft.Win32;
 using ParrotPet.Models;
 using ParrotPet.Services;
 
 namespace ParrotPet.Views;
 
-/// <summary>Окно настроек: монитор, размер и скорость. «Применить» — на лету, «Сохранить» — ещё и в файл.</summary>
+/// <summary>Окно настроек: кличка, монитор, размер и скорость. «Применить» — на лету, «Сохранить» — ещё и в файл.</summary>
 public partial class SettingsWindow : Window
 {
     private readonly SettingsService _settings;
+    private readonly PetProfile _profile;
     private readonly SettingsModel _draft;
 
-    public SettingsWindow(SettingsService settings, ScreenService screens)
+    public SettingsWindow(SettingsService settings, ScreenService screens, PetProfile profile)
     {
         _settings = settings;
+        _profile = profile;
         _draft = settings.Current.Clone();
 
-        ApplySystemTheme();
+        ThemeHelper.Apply(this);
         InitializeComponent();
 
+        NameBox.MaxLength = PetProfile.MaxNameLength;
+        NameBox.Text = profile.Name;
         ScreenCombo.ItemsSource = screens.GetScreens();
         DataContext = _draft;
     }
 
-    /// <summary>Тёмная или светлая тема окна — по настройке Windows.</summary>
-    private void ApplySystemTheme()
+    private void Apply()
     {
-        bool light = Registry.GetValue(
-            @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
-            "AppsUseLightTheme", 1) is not int value || value != 0;
-
-        Background = new SolidColorBrush(light ? Color.FromRgb(0xF3, 0xF3, 0xF3) : Color.FromRgb(0x20, 0x20, 0x20));
-        Foreground = new SolidColorBrush(light ? Colors.Black : Color.FromRgb(0xF0, 0xF0, 0xF0));
+        _profile.Name = NameBox.Text; // пустое имя игнорируется профилем
+        NameBox.Text = _profile.Name;
+        _settings.Apply(_draft);
     }
 
-    private void Apply_Click(object sender, RoutedEventArgs e) => _settings.Apply(_draft);
+    private void Apply_Click(object sender, RoutedEventArgs e) => Apply();
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        _settings.Apply(_draft);
+        Apply();
         _settings.Save();
         Close();
     }
