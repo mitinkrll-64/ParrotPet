@@ -1,0 +1,30 @@
+﻿<Window x:Class="ParrotPet.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ParrotPet"
+        Width="160" Height="200"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <!-- Тестовая фигура попугая из простых примитивов -->
+    <Canvas Width="160" Height="200">
+        <!-- Хвост -->
+        <Polygon Points="60,130 100,130 95,195 65,195" Fill="#1E88E5"/>
+        <!-- Тело -->
+        <Ellipse Canvas.Left="30" Canvas.Top="60" Width="100" Height="125" Fill="#43A047"/>
+        <!-- Крыло -->
+        <Ellipse Canvas.Left="38" Canvas.Top="95" Width="45" Height="75" Fill="#2E7D32"/>
+        <!-- Голова -->
+        <Ellipse Canvas.Left="40" Canvas.Top="15" Width="80" Height="75" Fill="#66BB6A"/>
+        <!-- Глаз -->
+        <Ellipse Canvas.Left="85" Canvas.Top="35" Width="22" Height="22" Fill="White"/>
+        <Ellipse Canvas.Left="92" Canvas.Top="42" Width="9" Height="9" Fill="Black"/>
+        <!-- Клюв -->
+        <Polygon Points="108,55 140,65 112,80" Fill="#FDD835"/>
+    </Canvas>
+</Window>
