@@ -62,7 +62,7 @@
                     <!-- Хвост -->
                     <Canvas x:Name="TailContainer">
                         <Canvas.RenderTransform>
-                            <RotateTransform x:Name="TailRot" CenterX="16" CenterY="46"/>
+                            <RotateTransform x:Name="TailRot" CenterX="27" CenterY="51"/>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.TailImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
                     </Canvas>
@@ -70,7 +70,7 @@
                     <!-- Тело с лапками (дыхание масштабирует грудку от низа) -->
                     <Canvas x:Name="BodyContainer">
                         <Canvas.RenderTransform>
-                            <ScaleTransform x:Name="BreathScale" CenterX="30" CenterY="56"/>
+                            <ScaleTransform x:Name="BreathScale" CenterX="43" CenterY="56"/>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.BodyImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
                     </Canvas>
@@ -79,8 +79,8 @@
                     <Canvas x:Name="WingContainer">
                         <Canvas.RenderTransform>
                             <TransformGroup>
-                                <ScaleTransform x:Name="WingScale" CenterX="34" CenterY="32"/>
-                                <RotateTransform x:Name="WingRot" CenterX="34" CenterY="32"/>
+                                <ScaleTransform x:Name="WingScale" CenterX="41" CenterY="34"/>
+                                <RotateTransform x:Name="WingRot" CenterX="41" CenterY="34"/>
                             </TransformGroup>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.WingImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
@@ -89,17 +89,17 @@
                     <!-- Голова вместе с глазом: поворот вокруг шеи -->
                     <Canvas x:Name="HeadContainer">
                         <Canvas.RenderTransform>
-                            <RotateTransform x:Name="HeadRot" CenterX="38" CenterY="28"/>
+                            <RotateTransform x:Name="HeadRot" CenterX="48" CenterY="41"/>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.HeadImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
 
                         <!-- Глаз: два пикселя на два, блик; моргание масштабирует по Y -->
                         <Canvas>
                             <Canvas.RenderTransform>
-                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="16"/>
+                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="31.5"/>
                             </Canvas.RenderTransform>
-                            <Rectangle Canvas.Left="50" Canvas.Top="14" Width="4" Height="4" Fill="#1B1B1F"/>
-                            <Rectangle Canvas.Left="52" Canvas.Top="14" Width="2" Height="2" Fill="White"/>
+                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="2" Height="3" Fill="#1B1B1F"/>
+                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
                         </Canvas>
                     </Canvas>
                 </Canvas>

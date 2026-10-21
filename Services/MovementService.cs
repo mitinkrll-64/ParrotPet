@@ -32,7 +32,7 @@ public class MovementService
     private const double FlyWobbleHz = 1.8;     // частота этого колебания
 
     /// <summary>Где клюв касается земли при наклоне (в долях хитбокса 64): вправо / при развороте влево.</summary>
-    private const double BeakPeckX = 68.4;
+    private const double BeakPeckX = 70.9;
     private const double BeakPeckXMirrored = BaseSize - BeakPeckX;
 
     private readonly Random _random = new();
