@@ -1,23 +1,21 @@
 ﻿# Память проекта ParrotPet
 
 ## Текущий статус
-Этап 5 готов: профиль питомца (кличка, пол, возраст, сытость) с сохранением и Debug-окно разработчика. `dotnet build` — 0 ошибок, 0 предупреждений; приложение запускается и создаёт save_data.json. Headless-симуляция подтвердила: прерывание любого действия (Interrupt/ForceFall/Teleport), кормление после прерывания, чистка пёрышек по запросу, JSON-сохранение/загрузка, битый файл → новый питомец, Reset. Визуально окна (DebugWindow, цвет восковицы) и глобальный хоткей НЕ проверялись.
+Этап 6 готов: универсальная система скинов (6 пресетов), отвязанная от анимаций. `dotnet build` — 0 ошибок, 0 предупреждений; приложение запускается и пишет ActiveSkinId в save_data.json. Проверено рендером настоящего MainWindow в PNG: все 6 скинов × 3 позы (покой, полёт, клевание/самка) выглядят корректно, при смене скина значения трансформаций анимаций не меняются (0 расхождений). Вживую смену скина на летящем попугае и окна НЕ проверяли.
 
 ## Сделано
-- Этапы 1–4: оверлей, трей, FSM, физика, настройки, мультимонитор, масштаб, волнистый попугайчик, полёт, зерно, анимации.
-- Этап 5:
-  - Models/PetProfile: Name (по умолчанию случайная из Кеша/Гоша/Рио/Чики/Пико/Арчи/Киви/Лимончик; пустая игнорируется, максимум 20 символов), Gender (Male/Female, случайный при создании), Birthday (+ AgeDays вычисляется от Birthday, растёт сам; сеттер возраста сдвигает Birthday), Hunger 0–100 (больше — сытее; старт 50; кормление +20). Событие Changed.
-  - Services/SaveService: save_data.json рядом с exe (в .gitignore); автосохранение с задержкой 1 с, сохранение при выходе; нет файла или он битый → новый случайный питомец; Reset() удаляет файл и заводит нового.
-  - Цвет восковицы по полу (MainWindow.ApplyGender): самец синяя, самка бежево-коричневая; обновляется мгновенно по Changed.
-  - Views/DebugWindow + ViewModels/DebugViewModel (+ RelayCommand, ViewModelBase): вкладки «Анимации» (Idle, Walk ◀/▶, Fly, Fall, Eat, Preen, Heart, чекбокс автономного поведения), «Состояние» (имя + случайное имя, пол, сытость-ползунок, возраст ±), «Тесты» (бросить зерно, телепорт в центр, Reset Save); внизу текущее состояние FSM.
-  - Безопасное переопределение FSM: MovementService.Interrupt()/ForceFall()/TeleportToCenter(); MainViewModel.Play*() прерывают действие и вызывают BehaviorController.Reschedule(); у контроллера есть Enabled.
-  - Вызов Debug: пункт трея «Debug / Меню разработчика», глобальный Ctrl+Shift+D (Services/HotkeyService, RegisterHotKey), F12 при фокусе на окне питомца или Debug. F12 глобально не перехватывается намеренно, чтобы не ломать другие программы.
-  - SettingsWindow: добавлено поле «Имя питомца». ThemeHelper вынесен в общий сервис. Подсказка трея: «Имя — сытость: N/100».
+- Этапы 1–5: оверлей, трей, FSM, физика, настройки, мультимонитор, масштаб, волнистый попугайчик, полёт, зерно, анимации, PetProfile + save_data.json, Debug-окно (F12 / Ctrl+Shift+D / трей).
+- Этап 6:
+  - Models/PetSkin: Id, DisplayName, IsUnlocked, цвета (hex): Body, BodyShade, Head, Stripes, Wing, WingStripes, Beak, Cheeks, Cheeks2, Tail1–3, Feet. Цвет восковицы зависит от пола, не от скина.
+  - Services/SkinService: реестр из 6 скинов по референсу Assets/Skins/skins.jpg (в референсе 8 птиц; взяты: Классический зелёный (id classic-green, по умолчанию), Небесно-голубой sky-blue, Лютино lutino, Фиолетовый опалин violet-opaline, Бирюзово-серый teal-grey, Закатный оранжевый sunset-orange; не вошли оранжевоголовый зелёный и коралловый — добавляются одной записью). ApplySkin(id) подменяет кисти в Application.Resources (Skin.*), запоминает выбор в PetProfile.ActiveSkinId. Неизвестный/закрытый скин → стандартный; изменение ActiveSkinId из профиля (Reset Save) подтягивает внешний вид.
+  - Архитектура: в MainWindow.xaml цвета частей — DynamicResource Skin.*; анимации крутят только RenderTransform контейнеров BodyContainer/HeadContainer/WingContainer/TailContainer и скина не знают. Смена скина не сбрасывает ни позу, ни позицию, ни состояние FSM.
+  - UI: ComboBox скинов с мини-иконкой (общий шаблон SkinItemTemplate и HexBrushConverter в App.xaml) в SettingsWindow (применяется кнопками «Применить/Сохранить») и в DebugWindow (применяется сразу).
+  - PetProfile.ActiveSkinId сохраняется в save_data.json; старые сохранения без поля получают classic-green.
 
 ## Окружение
 - SDK 8.0.426 в `%USERPROFILE%\.dotnet` (не в PATH). Сборка: `& "$env:USERPROFILE\.dotnet\dotnet.exe" build`.
 - Правило пользователя: после каждого этапа пересобирать exe: `dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish` (нужен .NET 8 Desktop Runtime; publish/ в .gitignore).
+- Приём для проверки без запуска GUI: консольный проект с ProjectReference на ParrotPet.csproj, new App().InitializeComponent(), new MainWindow(), рендер Content в RenderTargetBitmap.
 
 ## Дальше
-- Посмотреть вживую: окно Debug, смену цвета восковицы, хоткей Ctrl+Shift+D (если комбинация занята другой программой — не сработает, регистрация тихо пропускается).
-- Идеи: убывание сытости со временем, реакции на голод, звуки.
+- Посмотреть вживую смену скина во время полёта/ходьбы; при желании добавить ещё скины (запись в SkinService.All) и магазин (IsUnlocked).

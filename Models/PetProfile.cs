@@ -22,6 +22,7 @@ public class PetProfile
     private PetGender _gender = PetGender.Male;
     private DateTime _birthday = DateTime.Now;
     private double _hunger = 50;
+    private string _activeSkinId = "classic-green";
 
     /// <summary>Любое изменение профиля (для обновления спрайта, UI и автосохранения).</summary>
     public event Action? Changed;
@@ -78,6 +79,18 @@ public class PetProfile
         }
     }
 
+    /// <summary>Выбранный скин (Id из SkinService); неизвестный Id заменяется при запуске на стандартный.</summary>
+    public string ActiveSkinId
+    {
+        get => _activeSkinId;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value == _activeSkinId) return;
+            _activeSkinId = value;
+            Changed?.Invoke();
+        }
+    }
+
     /// <summary>Возраст в днях; растёт сам со временем, т.к. считается от дня рождения.</summary>
     [JsonIgnore]
     public int AgeDays
@@ -104,6 +117,7 @@ public class PetProfile
         _gender = other._gender;
         _birthday = other._birthday;
         _hunger = other._hunger;
+        _activeSkinId = other._activeSkinId;
         Changed?.Invoke();
     }
 }

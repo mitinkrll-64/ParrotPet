@@ -13,9 +13,12 @@ public class DebugViewModel : ViewModelBase, IDisposable
     private readonly PetProfile _profile;
     private readonly DispatcherTimer _stateTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
 
-    public DebugViewModel(MainViewModel main, SaveService save)
+    private readonly SkinService _skins;
+
+    public DebugViewModel(MainViewModel main, SkinService skins, SaveService save)
     {
         _main = main;
+        _skins = skins;
         _profile = main.Profile;
 
         // Анимации: каждая команда безопасно прерывает текущее действие FSM
@@ -96,6 +99,20 @@ public class DebugViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>Доступные скины для списка.</summary>
+    public System.Collections.Generic.IReadOnlyList<PetSkin> Skins => SkinService.All;
+
+    /// <summary>Id активного скина; смена применяется мгновенно, анимация продолжается.</summary>
+    public string ActiveSkinId
+    {
+        get => _skins.Active.Id;
+        set
+        {
+            if (value is not null) _skins.ApplySkin(value);
+            Raise();
+        }
+    }
+
     /// <summary>Включено ли случайное поведение (раз в 7–15 секунд).</summary>
     public bool AutoBehavior
     {
@@ -118,6 +135,7 @@ public class DebugViewModel : ViewModelBase, IDisposable
         Raise(nameof(IsFemale));
         Raise(nameof(Hunger));
         Raise(nameof(AgeDays));
+        Raise(nameof(ActiveSkinId));
     }
 
     public void Dispose()

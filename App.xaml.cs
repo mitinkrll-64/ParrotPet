@@ -11,6 +11,7 @@ public partial class App : Application
     private readonly SettingsService _settings = new();
     private readonly SaveService _save = new();
     private readonly ScreenService _screens = new();
+    private SkinService? _skins;
     private TrayService? _tray;
     private HotkeyService? _hotkey;
     private MainViewModel? _viewModel;
@@ -24,6 +25,10 @@ public partial class App : Application
 
         _settings.Load();
         _save.Load();
+
+        // Скин применяем до создания окон: части спрайта берут кисти из ресурсов Skin.*
+        _skins = new SkinService(_save.Profile);
+        _skins.Initialize();
 
         var viewModel = new MainViewModel(_settings, _screens, _save.Profile);
         _viewModel = viewModel;
@@ -67,7 +72,7 @@ public partial class App : Application
     {
         if (_settingsWindow is null)
         {
-            _settingsWindow = new SettingsWindow(_settings, _screens, _save.Profile);
+            _settingsWindow = new SettingsWindow(_settings, _screens, _save.Profile, _skins!);
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
             _settingsWindow.Show();
         }
@@ -84,7 +89,7 @@ public partial class App : Application
         }
         if (_viewModel is null) return;
 
-        var debugViewModel = new DebugViewModel(_viewModel, _save);
+        var debugViewModel = new DebugViewModel(_viewModel, _skins!, _save);
         _debugWindow = new DebugWindow(debugViewModel, _viewModel);
         _debugWindow.Closed += (_, _) =>
         {

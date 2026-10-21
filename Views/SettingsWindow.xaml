@@ -11,6 +11,11 @@
         <TextBlock Text="Имя питомца" FontWeight="SemiBold" Margin="0,0,0,6"/>
         <TextBox x:Name="NameBox" Margin="0,0,0,18"/>
 
+        <TextBlock Text="Скин" FontWeight="SemiBold" Margin="0,0,0,6"/>
+        <ComboBox x:Name="SkinCombo" Margin="0,0,0,18"
+                  ItemTemplate="{StaticResource SkinItemTemplate}"
+                  SelectedValuePath="Id"/>
+
         <TextBlock Text="Монитор" FontWeight="SemiBold" Margin="0,0,0,6"/>
         <ComboBox x:Name="ScreenCombo"
                   DisplayMemberPath="DisplayName"

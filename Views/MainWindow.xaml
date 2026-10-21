@@ -36,79 +36,74 @@
                     </TransformGroup>
                 </Canvas.RenderTransform>
 
-                <!-- Волнистый попугайчик нарисован в системе координат хитбокса 64x64 -->
+                <!-- Волнистый попугайчик в системе координат хитбокса 64x64. Анимации привязаны к контейнерам
+                     BodyContainer / HeadContainer / WingContainer / TailContainer (их RenderTransform),
+                     а цвета частей берутся из ресурсов Skin.* (SkinService) — анимации про скин ничего не знают -->
                 <Canvas Canvas.Left="16" Canvas.Top="16" Width="64" Height="64" ClipToBounds="False">
 
                     <!-- Длинный ступенчатый хвост -->
-                    <Canvas>
+                    <Canvas x:Name="TailContainer">
                         <Canvas.RenderTransform>
                             <RotateTransform x:Name="TailRot" CenterX="24" CenterY="44"/>
                         </Canvas.RenderTransform>
-                        <Polygon Points="21,41 29,45 12,67 6,62" Fill="#2563C9"/>
-                        <Polygon Points="23,42 30,46 19,64 13,59" Fill="#4C93F0"/>
-                        <Polygon Points="25,44 31,47 25,58 21,55" Fill="#7DB4FA"/>
+                        <Polygon Points="21,41 29,45 12,67 6,62" Fill="{DynamicResource Skin.Tail1}"/>
+                        <Polygon Points="23,42 30,46 19,64 13,59" Fill="{DynamicResource Skin.Tail2}"/>
+                        <Polygon Points="25,44 31,47 25,58 21,55" Fill="{DynamicResource Skin.Tail3}"/>
                     </Canvas>
 
                     <!-- Лапки -->
-                    <Rectangle Canvas.Left="28" Canvas.Top="55" Width="2.4" Height="7" Fill="#D98A2B"/>
-                    <Rectangle Canvas.Left="37" Canvas.Top="55" Width="2.4" Height="7" Fill="#D98A2B"/>
-                    <Ellipse Canvas.Left="25.5" Canvas.Top="60" Width="8" Height="3" Fill="#D98A2B"/>
-                    <Ellipse Canvas.Left="34.5" Canvas.Top="60" Width="8" Height="3" Fill="#D98A2B"/>
+                    <Rectangle Canvas.Left="28" Canvas.Top="55" Width="2.4" Height="7" Fill="{DynamicResource Skin.Feet}"/>
+                    <Rectangle Canvas.Left="37" Canvas.Top="55" Width="2.4" Height="7" Fill="{DynamicResource Skin.Feet}"/>
+                    <Ellipse Canvas.Left="25.5" Canvas.Top="60" Width="8" Height="3" Fill="{DynamicResource Skin.Feet}"/>
+                    <Ellipse Canvas.Left="34.5" Canvas.Top="60" Width="8" Height="3" Fill="{DynamicResource Skin.Feet}"/>
 
                     <!-- Тело (дыхание масштабирует грудку) -->
-                    <Canvas>
+                    <Canvas x:Name="BodyContainer">
                         <Canvas.RenderTransform>
                             <ScaleTransform x:Name="BreathScale" CenterX="29" CenterY="59"/>
                         </Canvas.RenderTransform>
-                        <Ellipse Canvas.Left="11" Canvas.Top="25" Width="38" Height="34">
-                            <Ellipse.Fill>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#8DE35C" Offset="0"/>
-                                    <GradientStop Color="#45B84A" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Ellipse.Fill>
-                        </Ellipse>
+                        <Ellipse Canvas.Left="11" Canvas.Top="25" Width="38" Height="34" Fill="{DynamicResource Skin.BodyGradient}"/>
                     </Canvas>
 
                     <!-- Крыло с волнистыми тёмными полосками -->
-                    <Canvas>
+                    <Canvas x:Name="WingContainer">
                         <Canvas.RenderTransform>
                             <TransformGroup>
                                 <ScaleTransform x:Name="WingScale" CenterX="23" CenterY="34"/>
                                 <RotateTransform x:Name="WingRot" CenterX="23" CenterY="34"/>
                             </TransformGroup>
                         </Canvas.RenderTransform>
-                        <Ellipse Canvas.Left="13" Canvas.Top="33" Width="20" Height="22" Fill="#3FA146"/>
-                        <Path Data="M15,39 Q18,36 21,39 T27,39 T31,39" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                        <Path Data="M14.5,44 Q17.5,41 20.5,44 T26.5,44 T31,44" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                        <Path Data="M15.5,49 Q18.5,46 21.5,49 T27.5,49 T30,49" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Ellipse Canvas.Left="13" Canvas.Top="33" Width="20" Height="22" Fill="{DynamicResource Skin.Wing}"/>
+                        <Path Data="M15,39 Q18,36 21,39 T27,39 T31,39" Stroke="{DynamicResource Skin.WingStripes}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M14.5,44 Q17.5,41 20.5,44 T26.5,44 T31,44" Stroke="{DynamicResource Skin.WingStripes}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M15.5,49 Q18.5,46 21.5,49 T27.5,49 T30,49" Stroke="{DynamicResource Skin.WingStripes}" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Canvas>
 
                     <!-- Голова: лимонно-жёлтая, полоски на затылке, щёчные пятна, восковица, изогнутый клюв -->
-                    <Canvas>
+                    <Canvas x:Name="HeadContainer">
                         <Canvas.RenderTransform>
                             <RotateTransform x:Name="HeadRot" CenterX="36" CenterY="32"/>
                         </Canvas.RenderTransform>
 
-                        <Ellipse Canvas.Left="22" Canvas.Top="5" Width="30" Height="30" Fill="#FFEB5B"/>
+                        <Ellipse Canvas.Left="22" Canvas.Top="5" Width="30" Height="30" Fill="{DynamicResource Skin.Head}"/>
 
                         <!-- Волнистые полоски на затылке -->
-                        <Path Data="M24,11 Q26.5,8.5 29,11 T34,11" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                        <Path Data="M23,16 Q25.5,13.5 28,16 T33,16" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                        <Path Data="M23.5,21 Q26,18.5 28.5,21 T33.5,21" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                        <Path Data="M25,26 Q27,24 29,26" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M24,11 Q26.5,8.5 29,11 T34,11" Stroke="{DynamicResource Skin.Stripes}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M23,16 Q25.5,13.5 28,16 T33,16" Stroke="{DynamicResource Skin.Stripes}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M23.5,21 Q26,18.5 28.5,21 T33.5,21" Stroke="{DynamicResource Skin.Stripes}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M25,26 Q27,24 29,26" Stroke="{DynamicResource Skin.Stripes}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
 
                         <!-- Щёчное фиолетовое пятно с синим -->
-                        <Ellipse Canvas.Left="35" Canvas.Top="25" Width="7.5" Height="5" Fill="#6A4FE0"/>
-                        <Ellipse Canvas.Left="39" Canvas.Top="27" Width="3.5" Height="2.8" Fill="#2F7BFF"/>
+                        <Ellipse Canvas.Left="35" Canvas.Top="25" Width="7.5" Height="5" Fill="{DynamicResource Skin.Cheek}"/>
+                        <Ellipse Canvas.Left="39" Canvas.Top="27" Width="3.5" Height="2.8" Fill="{DynamicResource Skin.Cheek2}"/>
 
                         <!-- Три точки на горле -->
-                        <Ellipse Canvas.Left="39.5" Canvas.Top="30.5" Width="2.2" Height="2.2" Fill="#263238"/>
-                        <Ellipse Canvas.Left="43" Canvas.Top="29.5" Width="2.2" Height="2.2" Fill="#263238"/>
-                        <Ellipse Canvas.Left="46.2" Canvas.Top="27.5" Width="2.2" Height="2.2" Fill="#263238"/>
+                        <Ellipse Canvas.Left="39.5" Canvas.Top="30.5" Width="2.2" Height="2.2" Fill="{DynamicResource Skin.Stripes}"/>
+                        <Ellipse Canvas.Left="43" Canvas.Top="29.5" Width="2.2" Height="2.2" Fill="{DynamicResource Skin.Stripes}"/>
+                        <Ellipse Canvas.Left="46.2" Canvas.Top="27.5" Width="2.2" Height="2.2" Fill="{DynamicResource Skin.Stripes}"/>
 
                         <!-- Изогнутый клюв и синяя восковица над ним -->
-                        <Path Data="M48,21 C54,18 61,22 59.5,30 C58,27.5 54,26.5 50,27.5 Z" Fill="#F2B84B"/>
+                        <Path Data="M48,21 C54,18 61,22 59.5,30 C58,27.5 54,26.5 50,27.5 Z" Fill="{DynamicResource Skin.Beak}"/>
                         <Ellipse x:Name="Cere" Canvas.Left="46.5" Canvas.Top="18.5" Width="8" Height="6.5" Fill="#2E86FF"/>
                         <Ellipse x:Name="Nostril" Canvas.Left="51" Canvas.Top="20.5" Width="1.6" Height="1.6" Fill="#1B4FB0"/>
 
