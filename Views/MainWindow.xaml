@@ -2,43 +2,139 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ParrotPet"
-        Width="64" Height="64"
+        Width="96" Height="96"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
+        ClipToBounds="False"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         MouseMove="Window_MouseMove"
         MouseLeftButtonUp="Window_MouseLeftButtonUp">
 
-    <!-- Масштаб из настроек: окно квадратное (64 * Scale), содержимое растягивается ScaleTransform -->
-    <Grid>
+    <!-- Масштаб из настроек: окно квадратное (96 * Scale), содержимое растягивается ScaleTransform -->
+    <Grid ClipToBounds="False">
         <Grid.LayoutTransform>
             <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
         </Grid.LayoutTransform>
 
-        <!-- Квадратный холст 64x64; все трансформации идут вокруг нижнего центра, bounding box остаётся квадратом -->
-        <Canvas Width="64" Height="64" RenderTransformOrigin="0.5,1">
-            <Canvas.RenderTransform>
-                <TransformGroup>
-                    <!-- Порядок важен: сначала сжатие/растяжение, затем наклон, затем разворот -->
-                    <ScaleTransform x:Name="PoseScale" ScaleX="1" ScaleY="1"/>
-                    <RotateTransform x:Name="PoseRotate" Angle="0"/>
-                    <!-- ScaleX = 1 вправо, -1 влево -->
-                    <ScaleTransform x:Name="ParrotFlip" ScaleX="1"/>
-                </TransformGroup>
-            </Canvas.RenderTransform>
+        <!-- Холст 96x96: логический хитбокс 64x64 лежит в центре, по краям запас для клюва, хвоста и поворотов -->
+        <Canvas Width="96" Height="96" ClipToBounds="False">
 
-            <!-- Тестовая фигура попугая из простых примитивов -->
-            <Polygon Points="4,60 18,42 25,48 14,62" Fill="#1E88E5"/>
-            <Ellipse Canvas.Left="12" Canvas.Top="26" Width="40" Height="36" Fill="#43A047"/>
-            <Ellipse Canvas.Left="15" Canvas.Top="36" Width="17" Height="20" Fill="#2E7D32"/>
-            <Ellipse Canvas.Left="17" Canvas.Top="4" Width="32" Height="30" Fill="#66BB6A"/>
-            <Ellipse Canvas.Left="35" Canvas.Top="12" Width="10" Height="10" Fill="White"/>
-            <Ellipse Canvas.Left="38" Canvas.Top="15" Width="4.5" Height="4.5" Fill="Black"/>
-            <Polygon Points="46,19 59,24 47,30" Fill="#FDD835"/>
+            <!-- Поза всего тела; точка вращения — низ хитбокса по центру (0.5, 80/96) -->
+            <Canvas Width="96" Height="96" ClipToBounds="False" RenderTransformOrigin="0.5,0.8333">
+                <Canvas.RenderTransform>
+                    <TransformGroup>
+                        <!-- Порядок важен: сначала сжатие/растяжение, затем наклон, затем разворот -->
+                        <ScaleTransform x:Name="PoseScale" ScaleX="1" ScaleY="1"/>
+                        <RotateTransform x:Name="PoseRotate" Angle="0"/>
+                        <!-- ScaleX = 1 вправо, -1 влево -->
+                        <ScaleTransform x:Name="ParrotFlip" ScaleX="1"/>
+                    </TransformGroup>
+                </Canvas.RenderTransform>
+
+                <!-- Волнистый попугайчик нарисован в системе координат хитбокса 64x64 -->
+                <Canvas Canvas.Left="16" Canvas.Top="16" Width="64" Height="64" ClipToBounds="False">
+
+                    <!-- Длинный ступенчатый хвост -->
+                    <Canvas>
+                        <Canvas.RenderTransform>
+                            <RotateTransform x:Name="TailRot" CenterX="24" CenterY="44"/>
+                        </Canvas.RenderTransform>
+                        <Polygon Points="21,41 29,45 12,67 6,62" Fill="#2563C9"/>
+                        <Polygon Points="23,42 30,46 19,64 13,59" Fill="#4C93F0"/>
+                        <Polygon Points="25,44 31,47 25,58 21,55" Fill="#7DB4FA"/>
+                    </Canvas>
+
+                    <!-- Лапки -->
+                    <Rectangle Canvas.Left="28" Canvas.Top="55" Width="2.4" Height="7" Fill="#D98A2B"/>
+                    <Rectangle Canvas.Left="37" Canvas.Top="55" Width="2.4" Height="7" Fill="#D98A2B"/>
+                    <Ellipse Canvas.Left="25.5" Canvas.Top="60" Width="8" Height="3" Fill="#D98A2B"/>
+                    <Ellipse Canvas.Left="34.5" Canvas.Top="60" Width="8" Height="3" Fill="#D98A2B"/>
+
+                    <!-- Тело (дыхание масштабирует грудку) -->
+                    <Canvas>
+                        <Canvas.RenderTransform>
+                            <ScaleTransform x:Name="BreathScale" CenterX="29" CenterY="59"/>
+                        </Canvas.RenderTransform>
+                        <Ellipse Canvas.Left="11" Canvas.Top="25" Width="38" Height="34">
+                            <Ellipse.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#8DE35C" Offset="0"/>
+                                    <GradientStop Color="#45B84A" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </Canvas>
+
+                    <!-- Крыло с волнистыми тёмными полосками -->
+                    <Canvas>
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="WingScale" CenterX="23" CenterY="34"/>
+                                <RotateTransform x:Name="WingRot" CenterX="23" CenterY="34"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Ellipse Canvas.Left="13" Canvas.Top="33" Width="20" Height="22" Fill="#3FA146"/>
+                        <Path Data="M15,39 Q18,36 21,39 T27,39 T31,39" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M14.5,44 Q17.5,41 20.5,44 T26.5,44 T31,44" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M15.5,49 Q18.5,46 21.5,49 T27.5,49 T30,49" Stroke="#263238" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Canvas>
+
+                    <!-- Голова: лимонно-жёлтая, полоски на затылке, щёчные пятна, восковица, изогнутый клюв -->
+                    <Canvas>
+                        <Canvas.RenderTransform>
+                            <RotateTransform x:Name="HeadRot" CenterX="36" CenterY="32"/>
+                        </Canvas.RenderTransform>
+
+                        <Ellipse Canvas.Left="22" Canvas.Top="5" Width="30" Height="30" Fill="#FFEB5B"/>
+
+                        <!-- Волнистые полоски на затылке -->
+                        <Path Data="M24,11 Q26.5,8.5 29,11 T34,11" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M23,16 Q25.5,13.5 28,16 T33,16" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M23.5,21 Q26,18.5 28.5,21 T33.5,21" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <Path Data="M25,26 Q27,24 29,26" Stroke="#37474F" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+
+                        <!-- Щёчное фиолетовое пятно с синим -->
+                        <Ellipse Canvas.Left="35" Canvas.Top="25" Width="7.5" Height="5" Fill="#6A4FE0"/>
+                        <Ellipse Canvas.Left="39" Canvas.Top="27" Width="3.5" Height="2.8" Fill="#2F7BFF"/>
+
+                        <!-- Три точки на горле -->
+                        <Ellipse Canvas.Left="39.5" Canvas.Top="30.5" Width="2.2" Height="2.2" Fill="#263238"/>
+                        <Ellipse Canvas.Left="43" Canvas.Top="29.5" Width="2.2" Height="2.2" Fill="#263238"/>
+                        <Ellipse Canvas.Left="46.2" Canvas.Top="27.5" Width="2.2" Height="2.2" Fill="#263238"/>
+
+                        <!-- Изогнутый клюв и синяя восковица над ним -->
+                        <Path Data="M48,21 C54,18 61,22 59.5,30 C58,27.5 54,26.5 50,27.5 Z" Fill="#F2B84B"/>
+                        <Ellipse Canvas.Left="46.5" Canvas.Top="18.5" Width="8" Height="6.5" Fill="#2E86FF"/>
+                        <Ellipse Canvas.Left="51" Canvas.Top="20.5" Width="1.6" Height="1.6" Fill="#1B4FB0"/>
+
+                        <!-- Глаз (моргание масштабирует по Y) -->
+                        <Canvas>
+                            <Canvas.RenderTransform>
+                                <ScaleTransform x:Name="EyeScale" CenterX="43" CenterY="19"/>
+                            </Canvas.RenderTransform>
+                            <Ellipse Canvas.Left="38" Canvas.Top="14" Width="10" Height="10" Fill="White" Stroke="#455A64" StrokeThickness="0.6"/>
+                            <Ellipse Canvas.Left="41" Canvas.Top="16.5" Width="5.2" Height="5.2" Fill="#111111"/>
+                            <Ellipse Canvas.Left="44" Canvas.Top="16.8" Width="1.8" Height="1.8" Fill="White"/>
+                        </Canvas>
+                    </Canvas>
+                </Canvas>
+            </Canvas>
+
+            <!-- Сердечко над головой: не вращается и не разворачивается вместе с телом -->
+            <Path x:Name="HeartPath" Canvas.Left="43" Canvas.Top="3" Opacity="0" Fill="#E53935"
+                  Data="M0,3 C0,0 4,0 5,3 C6,0 10,0 10,3 C10,6 5,9 5,10 C5,9 0,6 0,3 Z"
+                  RenderTransformOrigin="0.5,0.5">
+                <Path.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="HeartScale" ScaleX="1" ScaleY="1"/>
+                        <TranslateTransform x:Name="HeartMove" Y="0"/>
+                    </TransformGroup>
+                </Path.RenderTransform>
+            </Path>
         </Canvas>
     </Grid>
 </Window>

@@ -23,12 +23,19 @@ public partial class App : Application
         var window = new MainWindow { DataContext = viewModel };
         window.Show();
 
+        // Окно с зерном создаём сразу, но показывается оно только пока зерно на экране
+        _ = new FoodWindow(viewModel);
+
         // Трей управляет видимостью окна, кормлением, настройками и завершением приложения
         _tray = new TrayService(
             onToggle: () => viewModel.ToggleVisibility(),
             onFeed: () => viewModel.Feed(),
             onSettings: ShowSettings,
             onExit: () => Shutdown());
+
+        // Сытость показываем во всплывающей подсказке иконки
+        _tray.SetTooltip($"ParrotPet — сытость: {viewModel.Satiety}/100");
+        viewModel.SatietyChanged += s => _tray.SetTooltip($"ParrotPet — сытость: {s}/100");
 
         viewModel.VisibilityChanged += visible =>
         {

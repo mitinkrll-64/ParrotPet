@@ -1,0 +1,36 @@
+﻿<Window x:Class="ParrotPet.Views.FoodWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ParrotPet Food"
+        Width="120" Height="80"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Focusable="False"
+        ResizeMode="NoResize"
+        ClipToBounds="False">
+
+    <!-- Холст 120x80: зерно стоит на низу (центр x=60, низ y=70), по бокам место для крошек -->
+    <Grid ClipToBounds="False">
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="FoodScale" ScaleX="1" ScaleY="1"/>
+        </Grid.LayoutTransform>
+
+        <Canvas Width="120" Height="80" ClipToBounds="False">
+            <!-- Горстка золотистых зёрен проса -->
+            <Canvas x:Name="SeedGroup">
+                <Ellipse Canvas.Left="53" Canvas.Top="66" Width="7" Height="4.2" Fill="#E8B923" Stroke="#A67C00" StrokeThickness="0.5"/>
+                <Ellipse Canvas.Left="59.5" Canvas.Top="65.5" Width="6.5" Height="4.2" Fill="#F2C94C" Stroke="#A67C00" StrokeThickness="0.5"/>
+                <Ellipse Canvas.Left="56" Canvas.Top="62.5" Width="6" Height="3.8" Fill="#F7D774" Stroke="#A67C00" StrokeThickness="0.5"/>
+            </Canvas>
+
+            <!-- Крошки после клевания -->
+            <Ellipse x:Name="Crumb0" Width="3" Height="2.4" Fill="#E8B923" Opacity="0"/>
+            <Ellipse x:Name="Crumb1" Width="3" Height="2.4" Fill="#F2C94C" Opacity="0"/>
+            <Ellipse x:Name="Crumb2" Width="3" Height="2.4" Fill="#E8B923" Opacity="0"/>
+        </Canvas>
+    </Grid>
+</Window>

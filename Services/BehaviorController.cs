@@ -30,8 +30,8 @@ public class BehaviorController
     {
         _timer.Stop();
 
-        // 0 — посидеть, 1 — пройтись, 2 — взлететь, 3 — поклевать
-        switch (_random.Next(4))
+        // 0 — посидеть, 1 — пройтись, 2 — взлететь (клевание запускается только кормлением)
+        switch (_random.Next(3))
         {
             case 1:
                 double distance = 100 + _random.NextDouble() * 100;
@@ -39,9 +39,6 @@ public class BehaviorController
                 break;
             case 2:
                 _movement.StartFly();
-                break;
-            case 3:
-                _movement.StartEat();
                 break;
         }
 

@@ -33,6 +33,9 @@ public sealed class TrayService : IDisposable
         _notifyIcon.DoubleClick += (_, _) => onToggle();
     }
 
+    /// <summary>Подсказка при наведении на иконку (лимит Windows — 63 символа).</summary>
+    public void SetTooltip(string text) => _notifyIcon.Text = text.Length > 63 ? text[..63] : text;
+
     /// <summary>Рисует простую зелёную иконку, чтобы не хранить бинарный .ico в репозитории.</summary>
     private static Icon CreateIcon()
     {

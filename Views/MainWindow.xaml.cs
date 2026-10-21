@@ -47,7 +47,7 @@ public partial class MainWindow : Window
         var m = ViewModel.Movement;
 
         // Масштаб применяется на лету: окно остаётся квадратным
-        double size = m.Size;
+        double size = m.WindowSize;
         if (Math.Abs(Width - size) > 0.01)
         {
             Width = size;
@@ -56,24 +56,51 @@ public partial class MainWindow : Window
             ContentScale.ScaleY = ViewModel.Scale;
         }
 
-        Left = m.X;
-        Top = m.Y;
+        // Окно больше хитбокса на поле Pad, поэтому сдвигаем его на это поле
+        Left = m.X - m.Pad;
+        Top = m.Y - m.Pad;
 
         var pose = ViewModel.Animator.Pose;
         PoseScale.ScaleX = pose.ScaleX;
         PoseScale.ScaleY = pose.ScaleY;
         PoseRotate.Angle = pose.Rotation;
         ParrotFlip.ScaleX = m.FacingScale;
+
+        HeadRot.Angle = pose.HeadRotation;
+        WingScale.ScaleY = pose.WingScaleY;
+        WingRot.Angle = pose.WingRotation;
+        TailRot.Angle = pose.TailRotation;
+        BreathScale.ScaleY = pose.Breath;
+        BreathScale.ScaleX = 1 + (pose.Breath - 1) * 0.5;
+        EyeScale.ScaleY = Math.Max(0.05, pose.EyeOpen);
+
+        ApplyHeart(pose.Heart);
+    }
+
+    /// <summary>Сердечко: появляется, всплывает вверх и гаснет.</summary>
+    private void ApplyHeart(double t)
+    {
+        if (t < 0)
+        {
+            HeartPath.Opacity = 0;
+            return;
+        }
+        HeartPath.Opacity = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
+        HeartMove.Y = -14 * t;
+        double pop = 0.6 + 0.4 * Math.Min(1, t / 0.2);
+        HeartScale.ScaleX = pop;
+        HeartScale.ScaleY = pop;
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (ViewModel is null) return;
+        // Точка захвата считается от угла хитбокса, а не от угла окна с полями
         var grab = e.GetPosition(this);
-        ViewModel.Movement.BeginDrag(grab.X, grab.Y);
+        double pad = ViewModel.Movement.Pad;
+        ViewModel.Movement.BeginDrag(grab.X - pad, grab.Y - pad);
         CaptureMouse();
     }
-
     private void Window_MouseMove(object sender, MouseEventArgs e)
     {
         if (ViewModel is null || !IsMouseCaptured) return;
