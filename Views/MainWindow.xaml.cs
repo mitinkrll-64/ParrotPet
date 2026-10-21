@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,7 +9,6 @@ namespace ParrotPet.Views;
 /// <summary>Прозрачное окно-оверлей с попугаем: рендер кадров и перетаскивание мышью.</summary>
 public partial class MainWindow : Window
 {
-    private readonly Stopwatch _clock = new();
     private TimeSpan _lastRender;
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -23,9 +21,8 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ViewModel?.Start(ActualWidth, ActualHeight);
+        ViewModel?.Start();
         ApplyPosition();
-        _clock.Start();
         CompositionTarget.Rendering += OnRendering; // синхронно с частотой экрана
     }
 
@@ -43,13 +40,29 @@ public partial class MainWindow : Window
         ApplyPosition();
     }
 
-    /// <summary>Переносит позицию и разворот из физики в окно.</summary>
+    /// <summary>Переносит размер, позицию, разворот и позу анимации из сервисов в окно.</summary>
     private void ApplyPosition()
     {
         if (ViewModel is null) return;
         var m = ViewModel.Movement;
+
+        // Масштаб применяется на лету: окно остаётся квадратным
+        double size = m.Size;
+        if (Math.Abs(Width - size) > 0.01)
+        {
+            Width = size;
+            Height = size;
+            ContentScale.ScaleX = ViewModel.Scale;
+            ContentScale.ScaleY = ViewModel.Scale;
+        }
+
         Left = m.X;
         Top = m.Y;
+
+        var pose = ViewModel.Animator.Pose;
+        PoseScale.ScaleX = pose.ScaleX;
+        PoseScale.ScaleY = pose.ScaleY;
+        PoseRotate.Angle = pose.Rotation;
         ParrotFlip.ScaleX = m.FacingScale;
     }
 

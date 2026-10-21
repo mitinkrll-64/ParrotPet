@@ -12,5 +12,7 @@ public enum PetBehaviorState
     /// <summary>Падает под действием гравитации с пружинящим приземлением.</summary>
     Fall,
     /// <summary>Удерживается мышью.</summary>
-    Dragged
+    Dragged,
+    /// <summary>Клюёт корм (несколько наклонов вниз).</summary>
+    Eat
 }

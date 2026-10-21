@@ -10,12 +10,15 @@ public sealed class TrayService : IDisposable
     private readonly NotifyIcon _notifyIcon;
     private readonly Icon _icon;
 
-    public TrayService(Action onToggle, Action onExit)
+    public TrayService(Action onToggle, Action onFeed, Action onSettings, Action onExit)
     {
         _icon = CreateIcon();
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Показать/Скрыть", null, (_, _) => onToggle());
+        menu.Items.Add("Покормить", null, (_, _) => onFeed());
+        menu.Items.Add("Настройки...", null, (_, _) => onSettings());
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Выход", null, (_, _) => onExit());
 
         _notifyIcon = new NotifyIcon

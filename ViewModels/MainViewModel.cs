@@ -4,33 +4,47 @@ using ParrotPet.Services;
 
 namespace ParrotPet.ViewModels;
 
-/// <summary>ViewModel главного окна: состояние попугая, физика и автономное поведение.</summary>
+/// <summary>ViewModel главного окна: состояние попугая, физика, анимации и автономное поведение.</summary>
 public class MainViewModel
 {
     private readonly ParrotState _state = new();
     private readonly BehaviorController _behavior;
+    private readonly SettingsService _settings;
 
-    public MovementService Movement { get; } = new();
+    public MovementService Movement { get; }
+    public AnimationService Animator { get; } = new();
 
     /// <summary>Вызывается при смене видимости; true — показать окно.</summary>
     public event Action<bool>? VisibilityChanged;
 
-    public MainViewModel()
+    public MainViewModel(SettingsService settings, ScreenService screens)
     {
+        _settings = settings;
+        Movement = new MovementService(screens, settings.Current);
         _behavior = new BehaviorController(Movement);
+
+        Movement.Landed += Animator.TriggerLand;
+        settings.Changed += Movement.OnSettingsChanged;
     }
 
-    /// <summary>Запуск после того, как известны размеры окна.</summary>
-    public void Start(double width, double height)
+    /// <summary>Масштаб из настроек (применяется к ScaleTransform окна).</summary>
+    public double Scale => _settings.Current.Scale;
+
+    public void Start()
     {
-        Movement.SpriteWidth = width;
-        Movement.SpriteHeight = height;
         Movement.PlaceOnGround();
         _behavior.Start();
     }
 
     /// <summary>Кадр анимации; dt — секунды с прошлого кадра.</summary>
-    public void Tick(double dt) => Movement.Update(dt);
+    public void Tick(double dt)
+    {
+        Movement.Update(dt);
+        Animator.Update(dt, Movement.State, _settings.Current.BehaviorSpeed);
+    }
+
+    /// <summary>Покормить попугая (клевание).</summary>
+    public void Feed() => Movement.StartEat();
 
     /// <summary>Переключает видимость окна («Показать/Скрыть»).</summary>
     public void ToggleVisibility()
