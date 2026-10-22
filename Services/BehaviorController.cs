@@ -50,21 +50,30 @@ public class BehaviorController
     {
         _timer.Stop();
 
-        // 0 — посидеть, 1–2 — пройтись, 3–4 — взлететь (панель задач, верх окна или бок окна).
+        // Вес действий: посидеть 1, пройтись 2, взлететь 2, развернуться 1, посмотреть на пользователя 2.
         // Клевание запускается только кормлением.
-        switch (_random.Next(5))
+        int roll = _random.Next(8);
+        if (roll == 0)
         {
-            case 1:
-            case 2:
-                double distance = 100 + _random.NextDouble() * 100;
-                _movement.StartWalk(_random.Next(2) == 0 ? -distance : distance);
-                break;
-            case 3:
-            case 4:
-                _movement.StartFly();
-                break;
+            // посидеть
         }
-
+        else if (roll <= 2)
+        {
+            double distance = 100 + _random.NextDouble() * 100;
+            _movement.StartWalk(_random.Next(2) == 0 ? -distance : distance);
+        }
+        else if (roll <= 4)
+        {
+            _movement.StartFly();
+        }
+        else if (roll == 5)
+        {
+            _movement.TurnAround();
+        }
+        else
+        {
+            _movement.FaceUser(8 + _random.NextDouble() * 10);
+        }
         ScheduleNext();
     }
 }

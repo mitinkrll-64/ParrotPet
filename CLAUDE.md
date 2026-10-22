@@ -12,11 +12,12 @@
 - Физика и логика не знают про окна: `MovementService`, `FoodService`, `AnimationService` только считают, окна (`MainWindow`, `FoodWindow`) применяют результат каждый кадр через `CompositionTarget.Rendering`.
 - Координаты везде в DIP. Логический хитбокс попугая — квадрат 64×64 (`MovementService.BaseSize`), холст рисования 96×96 с полями по краям, чтобы клюв и хвост не обрезались.
 - Анимации и скины развязаны: анимации крутят только `RenderTransform` контейнеров частей тела в `MainWindow.xaml`; цвета и картинки частей берутся из ресурсов `Skin.*` (`SkinService` + `PixelSpriteBuilder`). Анимация не должна знать, какой скин надет.
+- Два вида спрайта: боковой (SideRig, смотрит влево/вправо, зеркалится ParrotFlip) и фронтальный (FrontRig, смотрит на пользователя). Анимации общие: AnimationService считает одну AnimationPose, а MainWindow.ApplySide/ApplyFront переводят её в трансформации частей своего вида. Вид выбирает MovementService (View, TurnAround, FaceUser, ForceFront); смена вида и разворот идут через сжатие по X в MainWindow.UpdateTurn. Шея (NeckFill) тянется между основанием шеи и сдвинутой головой, чтобы голова не отрывалась от туловища.
 - Спрайт — процедурный пиксель-арт в стиле референса `Assets/Skins/skins.jpg` (силуэты многоугольниками, автоконтур). Скины — данные в `SkinService.All`.
 - Любое ручное действие из Debug-окна должно безопасно прерывать текущее состояние FSM (`MovementService.Interrupt`) и откладывать случайное поведение (`BehaviorController.Reschedule`).
 
 ## Структура
-- Models: `PetProfile` (имя, пол, день рождения, сытость, `ActiveSkinId`), `PetSkin`, `SettingsModel`, `PetBehaviorState`, `FlightPhase`, `LandingKind`, `IdleAction`, `AnimationPose`.
+- Models: `PetProfile` (имя, пол, день рождения, сытость, `ActiveSkinId`), `PetSkin`, `SettingsModel`, `PetBehaviorState`, `PetView`, `FlightPhase`, `LandingKind`, `IdleAction`, `AnimationPose`.
 - Services: `MovementService` (FSM и физика), `BehaviorController` (случайные действия), `AnimationService` (позы), `FoodService`, `SkinService`, `PixelSpriteBuilder`, `ScreenService` (мониторы), `WindowSurfaceService` (окна, на которые садится попугай), `SettingsService` и `SaveService` (JSON), `TrayService`, `HotkeyService` (Ctrl+Shift+D), `ThemeHelper`.
 - ViewModels: `MainViewModel`, `DebugViewModel`. Views: главное окно, окно зерна, настройки, Debug.
 - Данные пользователя рядом с exe: `settings.json`, `save_data.json` (в .gitignore). Сборка в `publish/` тоже в .gitignore.

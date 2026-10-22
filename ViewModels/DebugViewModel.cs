@@ -45,6 +45,8 @@ public class DebugViewModel : ViewModelBase, IDisposable
         PlayEat = new RelayCommand(main.PlayEat);
         PlayPreen = new RelayCommand(main.PlayPreen);
         PlayHeart = new RelayCommand(main.PlayHeart);
+        TurnAround = new RelayCommand(() => { main.Movement.TurnAround(); main.Behavior.Reschedule(); });
+        FaceUser = new RelayCommand(() => { main.Movement.FaceUser(12); main.Behavior.Reschedule(); });
 
         // Состояние
         RandomName = new RelayCommand(() => Name = PetProfile.RandomName());
@@ -77,6 +79,8 @@ public class DebugViewModel : ViewModelBase, IDisposable
     public ICommand PlayEat { get; }
     public ICommand PlayPreen { get; }
     public ICommand PlayHeart { get; }
+    public ICommand TurnAround { get; }
+    public ICommand FaceUser { get; }
     public ICommand RandomName { get; }
     public ICommand AgeMinus { get; }
     public ICommand AgePlus { get; }
@@ -137,6 +141,17 @@ public class DebugViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>Включено ли случайное поведение (раз в 7–15 секунд).</summary>
+    /// <summary>Держать фронтальный вид (птица лицом к пользователю) во всех состояниях, кроме лазания по окну.</summary>
+    public bool ForceFront
+    {
+        get => _main.Movement.ForceFront;
+        set
+        {
+            _main.Movement.ForceFront = value;
+            Raise();
+        }
+    }
+
     public bool AutoBehavior
     {
         get => _main.Behavior.Enabled;
@@ -147,7 +162,7 @@ public class DebugViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public string CurrentState => $"Состояние: {_main.Movement.State}"
+    public string CurrentState => $"Состояние: {_main.Movement.State}, вид: {(_main.Movement.View == PetView.Front ? "спереди" : _main.Movement.FacingScale > 0 ? "вправо" : "влево")}"
         + (_main.Movement.State == PetBehaviorState.Fly ? $" / {_main.Movement.Phase} → {_main.Movement.FlyTarget}" : "")
         + (_main.Movement.IsPerched ? " (на окне)" : "")
         + (_main.Animator.CurrentIdleAction != IdleAction.None ? $" · {_main.Animator.CurrentIdleAction}" : "");

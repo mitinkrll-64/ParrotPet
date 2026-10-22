@@ -57,7 +57,7 @@
                      (Tail/Body/Wing/Head) — отдельный слой-картинка 96x96, который анимации вращают
                      и масштабируют через RenderTransform. Картинки слоёв берутся из ресурсов Skin.*Image
                      (SkinService + PixelSpriteBuilder), поэтому анимации про скин ничего не знают. -->
-                <Canvas Canvas.Left="16" Canvas.Top="16" Width="64" Height="64" ClipToBounds="False"
+                <Canvas x:Name="SideRig" Canvas.Left="16" Canvas.Top="16" Width="64" Height="64" ClipToBounds="False"
                         SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor">
 
                     <!-- Хвост -->
@@ -109,6 +109,13 @@
                         <Image Source="{DynamicResource Skin.WingImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
                     </Canvas>
 
+                    <!-- Шея: перо между основанием шеи (48,41) и сдвинутой головой — при чистке голова не «отрывается» от туловища.
+                         Длина считается в коде (MainWindow.xaml.cs), пока голова на месте — шея невидима -->
+
+                    <Line x:Name="NeckFill" X1="48" Y1="41" X2="48" Y2="41" Opacity="0" StrokeThickness="11"
+                          Stroke="{DynamicResource Skin.NeckBrush}" StrokeStartLineCap="Round" StrokeEndLineCap="Flat"
+                          RenderOptions.EdgeMode="Aliased"/>
+
                     <!-- Голова вместе с глазом: поворот вокруг шеи -->
                     <Canvas x:Name="HeadContainer">
                         <Canvas.RenderTransform>
@@ -136,6 +143,108 @@
                             <!-- Глаз как на референсе: чёрный овал 2x3, один блик сзади-сверху -->
                             <Rectangle Canvas.Left="51" Canvas.Top="30" Width="2" Height="3" Fill="#15151A"/>
                             <Rectangle Canvas.Left="51" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
+                        </Canvas>
+                    </Canvas>
+                </Canvas>
+
+                <!-- Фронтальный вид: птица сидит и смотрит на пользователя. Тот же принцип: каждая часть —
+                     отдельный слой с RenderTransform, цвета из ресурсов Skin.Front*Image. Анимации (одна и та же
+                     AnimationPose) переводятся в трансформации этих слоёв в MainWindow.xaml.cs -->
+                <Canvas x:Name="FrontRig" Canvas.Left="16" Canvas.Top="16" Width="64" Height="64" ClipToBounds="False"
+                        Visibility="Collapsed" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor">
+
+                    <Canvas x:Name="FTailContainer">
+                        <Canvas.RenderTransform>
+                            <RotateTransform x:Name="FTailRot" CenterX="32" CenterY="56"/>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontTailImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <!-- Лапки: подъём (шаг) и «подбирание» в перья -->
+                    <Canvas x:Name="FFootLContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FFootLScale" CenterX="28" CenterY="57"/>
+                                <TranslateTransform x:Name="FFootLMove" X="0" Y="0"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontFootLImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+                    <Canvas x:Name="FFootRContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FFootRScale" CenterX="36" CenterY="57"/>
+                                <TranslateTransform x:Name="FFootRMove" X="0" Y="0"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontFootRImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <Canvas x:Name="FBodyContainer">
+                        <Canvas.RenderTransform>
+                            <ScaleTransform x:Name="FBreathScale" CenterX="32" CenterY="58"/>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontBodyImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <!-- Крылья по бокам: поворот и масштаб вокруг плеча (наружу — «+» у левого, «−» у правого) -->
+                    <Canvas x:Name="FWingLContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FWingLScale" CenterX="21.5" CenterY="43"/>
+                                <RotateTransform x:Name="FWingLRot" CenterX="21.5" CenterY="43"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontWingLImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+                    <Canvas x:Name="FWingRContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FWingRScale" CenterX="42.5" CenterY="43"/>
+                                <RotateTransform x:Name="FWingRRot" CenterX="42.5" CenterY="43"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontWingRImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <!-- Шея спереди -->
+
+                    <Line x:Name="FNeckFill" X1="32" Y1="41" X2="32" Y2="41" Opacity="0" StrokeThickness="14"
+                          Stroke="{DynamicResource Skin.NeckBrush}" StrokeStartLineCap="Round" StrokeEndLineCap="Flat"
+                          RenderOptions.EdgeMode="Aliased"/>
+
+                    <!-- Голова: наклон вбок (крен), опускание/подъём, сжатие по высоте при поклоне -->
+                    <Canvas x:Name="FHeadContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FHeadScale" CenterX="32" CenterY="41"/>
+                                <RotateTransform x:Name="FHeadRot" CenterX="32" CenterY="41"/>
+                                <TranslateTransform x:Name="FHeadMove" X="0" Y="0"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FrontHeadImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+
+                        <Canvas>
+                            <Canvas.RenderTransform>
+                                <TranslateTransform x:Name="FBeakMove" X="0" Y="0"/>
+                            </Canvas.RenderTransform>
+                            <Image Source="{DynamicResource Skin.FrontBeakImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                        </Canvas>
+
+                        <!-- Два глаза: чёрные овалы 2x3 с бликом; моргание масштабирует по Y -->
+                        <Canvas>
+                            <Canvas.RenderTransform>
+                                <ScaleTransform x:Name="FEyeLScale" CenterX="28" CenterY="31.5"/>
+                            </Canvas.RenderTransform>
+                            <Rectangle Canvas.Left="27" Canvas.Top="30" Width="2" Height="3" Fill="#15151A"/>
+                            <Rectangle Canvas.Left="27" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
+                        </Canvas>
+                        <Canvas>
+                            <Canvas.RenderTransform>
+                                <ScaleTransform x:Name="FEyeRScale" CenterX="37" CenterY="31.5"/>
+                            </Canvas.RenderTransform>
+                            <Rectangle Canvas.Left="36" Canvas.Top="30" Width="2" Height="3" Fill="#15151A"/>
+                            <Rectangle Canvas.Left="36" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
                         </Canvas>
                     </Canvas>
                 </Canvas>

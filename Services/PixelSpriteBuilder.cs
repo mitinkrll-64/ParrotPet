@@ -8,7 +8,9 @@ namespace ParrotPet.Services;
 
 /// <summary>Готовые слои пиксель-арт спрайта (по одному на анимируемый контейнер).</summary>
 public record SpriteImages(BitmapSource Tail, BitmapSource FarFoot, BitmapSource Body, BitmapSource Foot,
-    BitmapSource Wing, BitmapSource Head, BitmapSource Beak);
+    BitmapSource Wing, BitmapSource Head, BitmapSource Beak,
+    BitmapSource FrontTail, BitmapSource FrontFootL, BitmapSource FrontFootR, BitmapSource FrontBody,
+    BitmapSource FrontWingL, BitmapSource FrontWingR, BitmapSource FrontHead, BitmapSource FrontBeak);
 
 /// <summary>
 /// Рисует пиксель-арт попугая в стиле референса (Assets/Skins/skins.jpg): вытянутое тело без шеи,
@@ -26,6 +28,7 @@ public static class PixelSpriteBuilder
     private const int ArtWidth = 62;
     private const int OffsetX = 17;
     private const int OffsetY = 38;
+    private const int FrontOffsetX = 18;   // фронтальный арт: ось симметрии x = 30 попадает в центр холста (клетка 48)
 
     public static SpriteImages Build(PetSkin skin, PetGender gender)
     {
@@ -55,8 +58,16 @@ public static class PixelSpriteBuilder
         var headLayer = BuildHead(head, body, stripes, beak, cheek, cheek2, cere, bodyLayer, wingLayer);
         var beakLayer = BuildBeak(beak);
 
+        // Фронтальный вид (птица смотрит на пользователя)
+        var frontBody = BuildFrontBody(body, shade, head);
+        var frontHead = BuildFrontHead(head, body, stripes, beak, cheek, cheek2, cere, frontBody);
+
         return new SpriteImages(tailLayer.ToBitmap(), farFootLayer.ToBitmap(), bodyLayer.ToBitmap(), footLayer.ToBitmap(),
-            wingLayer.ToBitmap(), headLayer.ToBitmap(), beakLayer.ToBitmap());
+            wingLayer.ToBitmap(), headLayer.ToBitmap(), beakLayer.ToBitmap(),
+            BuildFrontTail(tail1, tail2, tail3).ToBitmap(), BuildFrontFoot(26, feet).ToBitmap(),
+            BuildFrontFoot(34, Darken(feet, 0.9)).ToBitmap(), frontBody.ToBitmap(),
+            BuildFrontWing(wing, wingStripes, left: true).ToBitmap(), BuildFrontWing(wing, wingStripes, left: false).ToBitmap(),
+            frontHead.ToBitmap(), BuildFrontBeak(beak).ToBitmap());
     }
 
     // ---- Хвост: длинный и широкий, продолжает линию спины и сужается к острому концу.
@@ -250,8 +261,150 @@ public static class PixelSpriteBuilder
         return l;
     }
 
-    // ---- Вспомогательные функции
+    // ================= Фронтальный вид (птица сидит и смотрит на пользователя) =================
+    // Арт-координаты фронтального вида не зеркалятся: ось симметрии x = 30, лапки касаются y = 41.
+    // Холст 96x96 как у бокового вида, поэтому те же слои-картинки и тот же хитбокс:
+    // x_хитбокса = x_арта + 2, y_хитбокса = y_арта + 22.
 
+    // ---- Короткий хвост, выглядывающий из-под живота между лапками
+    private static Layer BuildFrontTail(Color t1, Color t2, Color t3)
+    {
+        var l = new Layer(mirror: false);
+        l.Polygon(new (double, double)[] { (27, 34), (33, 34), (34.5, 39.5), (31, 41.6), (29, 41.6), (25.5, 39.5) },
+            (x, y) => y > 40 ? Darken(t1, 0.85) : Math.Abs(x - 30) < 1.3 ? t3 : Math.Abs(x - 30) < 3 ? t2 : t1);
+        l.Outline();
+        return l;
+    }
+
+    // ---- Тело спереди: широкая грудка, сужается к животу; «подложка» под головой
+    private static Layer BuildFrontBody(Color body, Color shade, Color head)
+    {
+        var l = new Layer(mirror: false);
+        l.Polygon(new (double, double)[]
+        {
+            (21, 19.5), (30, 18.8), (39, 19.5), (42.5, 23), (42, 28), (40, 33), (36, 36), (30, 37),
+            (24, 36), (20, 33), (18, 28), (17.5, 23)
+        }, (x, y) =>
+        {
+            double t = (y - 19) / 18;
+            Color c = t < 0.3 ? body : t < 0.65 ? Lerp(body, shade, 0.5) : shade;
+            if (Math.Abs(x - 30) < 3.5 && y > 21 && y < 29) c = Lighten(c, 0.12);   // светлая грудка
+            int h = Hash((int)Math.Floor(x), (int)Math.Floor(y));
+            if (h < 8 && y > 22) c = Darken(c, 0.93);
+            else if (h > 94) c = Lighten(c, 0.12);
+            return c;
+        });
+        l.Outline();
+        // Подложка под головой, чтобы при наклоне головы на шее не было дыры
+        l.Ellipse(30, 19, 8, 4, (_, _) => Lerp(head, body, 0.4), onlyEmpty: true);
+        return l;
+    }
+
+    // ---- Крыло сбоку от тела (левое/правое — зеркально): листок вдоль тела, кончик внизу
+    private static Layer BuildFrontWing(Color wing, Color stripes, bool left)
+    {
+        var l = new Layer(mirror: false);
+        double Mx(double x) => left ? x : 60 - x;
+        var pts = new (double, double)[]
+        {
+            (19.5, 20.2), (17.6, 23), (16, 28), (15.6, 34), (16.4, 38.5), (18.2, 39.8), (19.8, 37),
+            (20.8, 31), (21.2, 25), (21, 21.5)
+        };
+        for (int i = 0; i < pts.Length; i++) pts[i] = (Mx(pts[i].Item1), pts[i].Item2);
+        l.Polygon(pts, (x, y) =>
+        {
+            double along = (y - 20) / 20;
+            int ix = (int)Math.Floor(x), iy = (int)Math.Floor(y);
+            Color c = wing;
+            if (along < 0.2) c = Lighten(c, 0.2);                       // блик на плече
+            if (along < 0.5)
+            {
+                int row = iy / 3, cx = ((ix + (row % 2) * 2) % 4 + 4) % 4, ry = iy % 3;
+                bool mark = (ry == 0 && cx == 0) || (ry == 1 && (cx == 1 || cx == 2)) || (ry == 2 && cx == 3);
+                if (mark) c = Lerp(c, stripes, 0.6);                    // чешуйки кроющих перьев
+            }
+            else if (Math.Abs(Mx(x) - 18.4) < 0.5) c = Lerp(c, stripes, 0.55); // линия маховых перьев
+            if (along > 0.85) c = Lerp(c, stripes, 0.3);
+            return c;
+        });
+        l.Outline();
+        return l;
+    }
+
+    // ---- Лапка спереди: ножка и пальцы веером (два вперёд-в стороны, коготки)
+    private static Layer BuildFrontFoot(int cx, Color feet)
+    {
+        var l = new Layer(mirror: false);
+        var scale = Lighten(feet, 0.16);
+        var claw = Darken(feet, 0.5);
+        for (int y = 35; y <= 38; y++)
+        {
+            l.SetArt(cx, y, y % 2 == 0 ? feet : scale);
+            l.SetArt(cx + 1, y, Darken(feet, 0.88));
+        }
+        for (int x = cx - 3; x <= cx + 4; x++) l.SetArt(x, 39, x % 2 == 0 ? feet : scale);
+        foreach (int x in new[] { cx - 3, cx, cx + 4 }) l.SetArt(x, 40, feet);
+        foreach (int x in new[] { cx - 3, cx + 4 }) l.SetArt(x, 41, claw);
+        l.SetArt(cx, 41, Darken(feet, 0.9));
+        return l;
+    }
+
+    // ---- Голова спереди: круглая, светлое лицо; щёчные пятна и точки на горле с двух сторон,
+    // восковица по центру над маленьким клювом. Глаза и нижняя половина клюва — в MainWindow.xaml.
+    private static Layer BuildFrontHead(Color head, Color body, Color stripes, Color beak, Color cheek, Color cheek2,
+        Color cere, Layer bodyLayer)
+    {
+        var l = new Layer(mirror: false);
+        l.Ellipse(30, 10.5, 11, 10.4, (x, y) =>
+        {
+            if (y >= 19.5) return ((int)x + (int)y) % 2 == 0 ? body : Lerp(head, body, 0.5);
+            if (y >= 17.5) return Lerp(head, body, 0.18);
+            if (y <= 3.5 && Math.Abs(x - 27) < 5) return Lighten(head, 0.14);   // блик на макушке
+            return head;
+        });
+
+        // Мелкие чёрточки на лбу и макушке (рябь затылка видна по краям головы)
+        for (int y = 2; y <= 6; y += 2)
+        foreach (int x in new[] { 21, 22, 38, 39 })
+            if (l.GetArt(x, y) is not null) l.SetArt(x, y, Lerp(head, stripes, 0.45));
+
+        // Щёчные пятна под глазами и точки на горле: симметрично
+        foreach (var (x, y) in new[] { (23, 12), (24, 12), (24, 13), (25, 13), (23, 13) })
+        {
+            l.SetArt(x, y, cheek);
+            l.SetArt(60 - x - 1, y, cheek);
+        }
+        foreach (var (x, y) in new[] { (24, 16), (27, 17) })
+        {
+            l.SetArt(x, y, cheek2);
+            l.SetArt(60 - x - 1, y, cheek2);
+        }
+
+        // Восковица между глазами с двумя ноздрями; сверху клюва маленький крючок
+        foreach (var (x, y) in new[] { (29, 10), (30, 10), (29, 11), (30, 11) }) l.SetArt(x, y, cere);
+        l.SetArt(29, 10, Darken(cere, 0.6));
+        l.SetArt(30, 10, Darken(cere, 0.6));
+        var beakShade = Darken(beak, 0.85);
+        foreach (var (x, y) in new[] { (29, 12), (30, 12), (29, 13), (30, 13), (29, 14), (30, 14) })
+            l.SetArt(x, y, y >= 13 ? beakShade : beak);
+
+        // Контур не рисуем там, где под головой тело
+        l.Outline(skip: (ix, iy) => bodyLayer.Has(ix, iy));
+        return l;
+    }
+
+    // ---- Нижняя половина клюва спереди
+    private static Layer BuildFrontBeak(Color beak)
+    {
+        var l = new Layer(mirror: false);
+        var shade = Darken(beak, 0.78);
+        foreach (var (x, y) in new[] { (29, 15), (30, 15), (29, 16), (30, 16) }) l.SetArt(x, y, shade);
+        l.SetArt(29, 15, Color.FromRgb(0xE0, 0x6A, 0x7A)); // язычок
+        l.SetArt(30, 15, Color.FromRgb(0xE0, 0x6A, 0x7A));
+        return l;
+    }
+
+    // ---- Вспомогательные функции
     private static int Hash(int x, int y) => Math.Abs((x * 73856093) ^ (y * 19349663)) % 100;
 
     private static Color Parse(string hex) => (Color)ColorConverter.ConvertFromString(hex);
@@ -273,12 +426,16 @@ public static class PixelSpriteBuilder
     private sealed class Layer
     {
         private readonly Color?[] _cells = new Color?[Size * Size];
+        private readonly bool _mirror;
 
-        private static int ImgX(int artX) => OffsetX + ArtWidth - 1 - artX;
+        /// <param name="mirror">true — боковой вид (арт смотрит влево и зеркалится вправо); false — фронтальный (без зеркала).</param>
+        public Layer(bool mirror = true) => _mirror = mirror;
+
+        private int ImgX(int artX) => _mirror ? OffsetX + ArtWidth - 1 - artX : FrontOffsetX + artX;
         private static int ImgY(int artY) => OffsetY + artY;
 
         // Центр клетки картинки в арт-координатах
-        private static double ArtCenterX(int ix) => OffsetX + ArtWidth - (ix + 0.5);
+        private double ArtCenterX(int ix) => _mirror ? OffsetX + ArtWidth - (ix + 0.5) : ix + 0.5 - FrontOffsetX;
         private static double ArtCenterY(int iy) => iy + 0.5 - OffsetY;
 
         public bool Has(int ix, int iy) => ix >= 0 && iy >= 0 && ix < Size && iy < Size && _cells[iy * Size + ix] is not null;
@@ -295,14 +452,15 @@ public static class PixelSpriteBuilder
             if (ix >= 0 && iy >= 0 && ix < Size && iy < Size) _cells[iy * Size + ix] = color;
         }
 
-        public void Ellipse(double cx, double cy, double rx, double ry, Func<double, double, Color> color)
+        public void Ellipse(double cx, double cy, double rx, double ry, Func<double, double, Color> color, bool onlyEmpty = false)
         {
             for (int iy = 0; iy < Size; iy++)
             for (int ix = 0; ix < Size; ix++)
             {
                 double x = ArtCenterX(ix), y = ArtCenterY(iy);
                 double dx = (x - cx) / rx, dy = (y - cy) / ry;
-                if (dx * dx + dy * dy <= 1) _cells[iy * Size + ix] = color(x, y);
+                if (dx * dx + dy * dy > 1 || (onlyEmpty && _cells[iy * Size + ix] is not null)) continue;
+                _cells[iy * Size + ix] = color(x, y);
             }
         }
 

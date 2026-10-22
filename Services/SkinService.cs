@@ -113,8 +113,32 @@ public class SkinService
         resources["Skin.FootImage"] = images.Foot;
         resources["Skin.WingImage"] = images.Wing;
         resources["Skin.HeadImage"] = images.Head;
+        resources["Skin.FrontTailImage"] = images.FrontTail;
+        resources["Skin.FrontFootLImage"] = images.FrontFootL;
+        resources["Skin.FrontFootRImage"] = images.FrontFootR;
+        resources["Skin.FrontBodyImage"] = images.FrontBody;
+        resources["Skin.FrontWingLImage"] = images.FrontWingL;
+        resources["Skin.FrontWingRImage"] = images.FrontWingR;
+        resources["Skin.FrontHeadImage"] = images.FrontHead;
+        resources["Skin.FrontBeakImage"] = images.FrontBeak;
+
+        // Шея: перья цвета груди (с лёгкой примесью цвета головы); тянутся между основанием шеи и сдвинутой головой
+        resources["Skin.NeckBrush"] = Frozen(new SolidColorBrush(Blend(Active.ColorHead, Active.ColorBody, 0.8)));
         resources["Skin.BeakImage"] = images.Beak;
         _gender = _profile.Gender;
+    }
+
+    private static Color Blend(string a, string b, double t)
+    {
+        var x = (Color)ColorConverter.ConvertFromString(a);
+        var y = (Color)ColorConverter.ConvertFromString(b);
+        return Color.FromRgb((byte)(x.R + (y.R - x.R) * t), (byte)(x.G + (y.G - x.G) * t), (byte)(x.B + (y.B - x.B) * t));
+    }
+
+    private static Brush Frozen(Brush brush)
+    {
+        brush.Freeze();
+        return brush;
     }
 
     private void OnProfileChanged()

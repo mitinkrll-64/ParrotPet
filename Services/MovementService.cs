@@ -96,6 +96,13 @@ public class MovementService
     public PetBehaviorState State { get; private set; } = PetBehaviorState.Idle;
     public FlightPhase Phase { get; private set; } = FlightPhase.Cruise;
 
+    /// <summary>Вид: сбоку (смотрит влево/вправо по FacingScale) или спереди (смотрит на пользователя).</summary>
+    public PetView View { get; private set; } = PetView.Side;
+
+    /// <summary>Отладка: держать фронтальный вид во всех состояниях, кроме лазания по окну.</summary>
+    public bool ForceFront { get; set; }
+
+    private double _frontLeft;
     /// <summary>Куда летит попугай (имеет смысл в состоянии Fly).</summary>
     public LandingKind FlyTarget { get; private set; } = LandingKind.Ground;
 
@@ -382,10 +389,53 @@ public class MovementService
     }
 
     /// <summary>Шаг физики; dt — время кадра в секундах.</summary>
+    /// <summary>Развернуться в другую сторону (только сидя, боком к пользователю).</summary>
+    public void TurnAround()
+    {
+        if (State != PetBehaviorState.Idle || View != PetView.Side) return;
+        FacingScale = -FacingScale;
+    }
+
+    /// <summary>Повернуться к пользователю лицом и посидеть так seconds секунд, потом снова боком.</summary>
+    public void FaceUser(double seconds)
+    {
+        if (State != PetBehaviorState.Idle) return;
+        View = PetView.Front;
+        _frontLeft = seconds;
+    }
+
+    /// <summary>Вид зависит от состояния: идти, лететь, клевать и лазать можно только боком (или принудительно спереди).</summary>
+    private void UpdateView(double dt)
+    {
+        if (State == PetBehaviorState.Cling)
+        {
+            View = PetView.Side; // на стене фронтального вида нет
+            return;
+        }
+        if (ForceFront)
+        {
+            View = PetView.Front;
+            return;
+        }
+        if (State is PetBehaviorState.Walk or PetBehaviorState.Fly or PetBehaviorState.Eat)
+        {
+            View = PetView.Side;
+        }
+        else if (State == PetBehaviorState.Idle && View == PetView.Front)
+        {
+            _frontLeft -= dt;
+            if (_frontLeft <= 0)
+            {
+                View = PetView.Side;
+                FacingScale = _random.Next(2) == 0 ? 1 : -1; // отворачивается в случайную сторону
+            }
+        }
+    }
+
     public void Update(double dt)
     {
         double prevX = X, prevY = Y;
-
+        UpdateView(dt);
         switch (State)
         {
             case PetBehaviorState.Idle:
