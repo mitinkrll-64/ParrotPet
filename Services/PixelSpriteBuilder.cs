@@ -7,7 +7,8 @@ using ParrotPet.Models;
 namespace ParrotPet.Services;
 
 /// <summary>Готовые слои пиксель-арт спрайта (по одному на анимируемый контейнер).</summary>
-public record SpriteImages(BitmapSource Tail, BitmapSource Body, BitmapSource Wing, BitmapSource Head);
+public record SpriteImages(BitmapSource Tail, BitmapSource FarFoot, BitmapSource Body, BitmapSource Foot,
+    BitmapSource Wing, BitmapSource Head, BitmapSource Beak);
 
 /// <summary>
 /// Рисует пиксель-арт попугая в стиле референса (Assets/Skins/skins.jpg): вытянутое тело без шеи,
@@ -47,28 +48,36 @@ public static class PixelSpriteBuilder
 
         var tailLayer = BuildTail(tail1, tail2, tail3);
         var bodyLayer = BuildBody(body, shade, feet);
+        var footLayer = BuildFoot(feet);
+        var farFootLayer = new Layer();
+        DrawLeg(farFootLayer, 20, Darken(feet, 0.82)); // дальняя лапка — за телом, чуть темнее
         var wingLayer = BuildWing(wing, wingStripes);
         var headLayer = BuildHead(head, body, stripes, beak, cheek, cheek2, cere, bodyLayer, wingLayer);
+        var beakLayer = BuildBeak(beak);
 
-        return new SpriteImages(tailLayer.ToBitmap(), bodyLayer.ToBitmap(), wingLayer.ToBitmap(), headLayer.ToBitmap());
+        return new SpriteImages(tailLayer.ToBitmap(), farFootLayer.ToBitmap(), bodyLayer.ToBitmap(), footLayer.ToBitmap(),
+            wingLayer.ToBitmap(), headLayer.ToBitmap(), beakLayer.ToBitmap());
     }
 
-    // ---- Хвост: длинный, сужается к концу; светлая кромка сверху, тёмный низ
+    // ---- Хвост: длинный и широкий, продолжает линию спины и сужается к острому концу.
+    // Два-три пера: светлое верхнее, средние, тёмное нижнее; между перьями тёмные бороздки.
+    // Корень хвоста (центр вращения анимации) — арт-точка (36, 29).
     private static Layer BuildTail(Color t1, Color t2, Color t3)
     {
         var l = new Layer();
         l.Polygon(new (double, double)[]
         {
-            (33, 28), (38, 26), (44, 28), (51, 30.8), (58, 32.2), (59.3, 33.8),
-            (58, 35.8), (54, 37.2), (50, 37.6), (45, 35.2), (40, 33), (34, 32)
+            (31, 24.5), (38, 26), (46, 28.8), (54, 32.3), (62, 36.2), (69, 39.6), (72, 41.2),
+            (70, 43), (62, 42), (54, 40), (46, 37.4), (38, 34.4), (32, 32)
         }, (x, y) =>
         {
-            // Расстояние от оси хвоста (36,29)->(58,34.5): отрицательное — верхняя кромка
-            double v = (y - 29) - (x - 36) * 0.25;
-            double u = (x - 36) / 22;
-            if (u > 0.92) return Darken(t1, 0.9);
-            if (v < -1.6) return t3;
-            if (v < 0.7) return t2;
+            // v — смещение от оси хвоста; отрицательное — верхняя кромка
+            double v = y - (28.3 + (x - 33) * 0.34);
+            if (x > 67) return Darken(t1, 0.85);                       // заострённый кончик
+            if (x > 40 && v >= 0.55 && v < 1.15) return Darken(t2, 0.78); // бороздка между перьями
+            if (x > 44 && v >= -2.6 && v < -2.0) return Darken(t3, 0.88);
+            if (v < -2.0) return t3;
+            if (v < 0.55) return t2;
             return t1;
         });
         l.Outline();
@@ -88,85 +97,153 @@ public static class PixelSpriteBuilder
         {
             double t = (y - 17) / (33.8 - 17);
             Color c = t < 0.35 ? body : t < 0.7 ? Lerp(body, shade, 0.5) : shade;
-            // Светлый блик на груди
+            // Светлый блик на груди и редкие «перышки» по корпусу
             if (x < 9.5 && y > 18 && y < 25) c = Lighten(c, 0.18);
+            int h = Hash((int)Math.Floor(x), (int)Math.Floor(y));
+            if (x < 20 && y > 21 && h < 9) c = Darken(c, 0.93);
+            else if (x < 20 && h > 94) c = Lighten(c, 0.12);
             return c;
         });
         l.Outline();
 
-        // Тонкие лапки с тремя пальцами (без контура), как на референсе
-        var leg = Darken(feet, 0.9);
-        var toe = Lighten(feet, 0.15);
-        foreach (int ax in new[] { 17, 27 })
-        {
-            for (int y = 34; y <= 37; y++) l.SetArt(ax, y, leg);
-            l.SetArt(ax, 38, leg);
-            for (int x = ax - 5; x <= ax + 2; x++) l.SetArt(x, 39, toe);
-            foreach (int x in new[] { ax - 5, ax - 2, ax + 1 }) l.SetArt(x, 40, toe);
-            foreach (int x in new[] { ax - 5, ax - 2 }) l.SetArt(x, 41, toe);
-        }
         return l;
+    }
+
+    // ---- Ближняя лапка отдельным слоем: поворачивается вокруг бедра (арт-точка 27.5, 33.5)
+    private static Layer BuildFoot(Color feet)
+    {
+        var l = new Layer();
+        DrawLeg(l, 26, feet);
+        return l;
+    }
+
+    /// <summary>
+    /// Лапка попугая (зигодактиль): пёстрая цевка с коленцем, два пальца вперёд и один-два назад
+    /// с тёмными коготками. ax — арт-x цевки; пальцы касаются y = 41 (низ хитбокса).
+    /// </summary>
+    private static void DrawLeg(Layer l, int ax, Color feet)
+    {
+        var leg = Darken(feet, 0.94);
+        var scale = Lighten(feet, 0.16);
+        var toe = feet;
+        var claw = Darken(feet, 0.5);
+
+        // Цевка: чешуйки через строку, лёгкий наклон вперёд к голени
+        int[] legX = { ax + 1, ax + 1, ax, ax, ax };
+        for (int i = 0; i < 5; i++)
+        {
+            int y = 35 + i;
+            var c = i % 2 == 0 ? leg : scale;
+            l.SetArt(legX[i], y, c);
+            l.SetArt(legX[i] + 1, y, Darken(c, 0.88));
+        }
+
+        // Пальцы: два вперёд (к голове), два назад; сустав чуть светлее, коготь — тёмная точка
+        for (int x = ax - 4; x <= ax + 1; x++) l.SetArt(x, 40, x % 2 == 0 ? toe : scale);
+        for (int x = ax - 3; x <= ax; x++) l.SetArt(x, 41, Darken(toe, 0.9));  // второй передний палец
+        for (int x = ax + 2; x <= ax + 4; x++) l.SetArt(x, 40, toe);
+        for (int x = ax + 2; x <= ax + 3; x++) l.SetArt(x, 41, Darken(toe, 0.9)); // второй задний палец
+        l.SetArt(ax - 5, 41, claw);
+        l.SetArt(ax - 4, 41, claw);
+        l.SetArt(ax + 5, 41, claw);
     }
 
     // ---- Крыло: лист от затылка к основанию хвоста, с рябью из перьев
     private static Layer BuildWing(Color wing, Color stripes)
     {
         var l = new Layer();
+        // Клин от плеча (24, 12) до кончика (58, 30): кончик ложится на основание хвоста, дальше хвост выступает
         l.Polygon(new (double, double)[]
         {
-            (18, 17), (18.3, 13), (20.5, 10), (24, 8.2), (28.5, 9.8), (34, 13.2), (39, 16.5),
-            (44.5, 20.5), (50, 24.8), (51, 26.5), (47, 27.2), (42, 28), (38, 30), (34, 31.2),
-            (29, 32), (25, 32.2), (21.5, 30), (19.5, 26), (18.3, 21.5)
+            (18, 17), (18.3, 13), (20.5, 10), (24, 8.2), (30, 10.5), (36, 13.5), (44, 18.5), (50, 23),
+            (56, 28.2), (58.5, 30.5), (56, 31.8), (51, 32), (46, 32.2), (41, 32.8), (36, 33.4),
+            (30, 33.7), (25, 32.8), (21.5, 30), (19.5, 26), (18.3, 21.5)
         }, (x, y) =>
         {
             double dx = x - 22, dy = y - 12.5, d = Math.Sqrt(dx * dx + dy * dy);
-            int h = Hash((int)Math.Floor(x), (int)Math.Floor(y));
-            bool line = (((int)Math.Floor(x - y) % 6) + 6) % 6 == 0;
+            int ix = (int)Math.Floor(x), iy = (int)Math.Floor(y);
+            int h = Hash(ix, iy);
+            // v — смещение от оси крыла (наклон 0.53): продольные границы маховых перьев
+            double v = (y - 12) - (x - 24) * 0.53;
 
             Color c = d < 7 ? Lighten(wing, 0.18) : wing;
-            if (d > 5 && line) c = Lerp(c, stripes, 0.5);
-            else if (d > 5 && h < 10) c = Lerp(c, stripes, 0.4);
-            else if (h > 90) c = Lighten(c, 0.22);
-            if (x > 44) c = Lerp(c, stripes, 0.3);        // кончик крыла темнее
-            if (y > 29.5) c = Darken(c, 0.9);              // нижняя кромка
+            if (x < 35)
+            {
+                // Кроющие перья у плеча: чешуйки в шахматном порядке
+                if (iy % 3 == 0 && (ix + (iy / 3 % 2) * 2) % 4 < 2) c = Lerp(c, stripes, 0.38);
+                else if (h > 92) c = Lighten(c, 0.2);
+            }
+            else
+            {
+                // Маховые перья: продольные тёмные линии, на кончике — «пальцы»
+                if (Math.Abs(v - 3.2) < 0.55 || Math.Abs(v - 6.2) < 0.55 || Math.Abs(v - 8.8) < 0.55)
+                    c = Lerp(c, stripes, 0.55);
+                else if (v < -2.5) c = Lighten(c, 0.14);      // светлая верхняя кромка
+                if (x > 52) c = Lerp(c, stripes, 0.3);         // кончик крыла темнее
+            }
+            if (v > 10) c = Darken(c, 0.88);                   // нижняя кромка в тени
             return c;
         });
         l.Outline();
         return l;
     }
 
-    // ---- Голова: круглая, светлая; переход к груди «шахматкой», крошечный клюв и восковица
+    // ---- Голова: круглая и крупная (милые пропорции), светлое лицо, «зебровые» полоски на затылке,
+    // фиолетовое щёчное пятно и три чёрные точки на горле, как у настоящего волнистого попугайчика.
+    // Глаз и нижняя половина клюва — отдельные детали в MainWindow.xaml (моргание, открытый клюв).
     private static Layer BuildHead(Color head, Color body, Color stripes, Color beak, Color cheek, Color cheek2,
         Color cere, Layer bodyLayer, Layer wingLayer)
     {
         var l = new Layer();
-        l.Ellipse(13, 10.5, 9.5, 10.5, (x, y) =>
+        l.Ellipse(12.5, 10.5, 10.2, 10.8, (x, y) =>
         {
             if (y >= 20) return ((int)x + (int)y) % 2 == 0 ? body : Lerp(head, body, 0.5);
             if (y >= 18) return Lerp(head, body, 0.18);
-            if (y <= 2) return Lighten(head, 0.08);
+            if (y <= 3.5 && x < 17) return Lighten(head, 0.14);   // блик на макушке
             return head;
         });
 
-        // Рябь на затылке у края крыла
-        for (int y = 3; y <= 12; y++)
-        for (int x = 17; x <= 21; x++)
-            if (l.GetArt(x, y) is not null && (x * 3 + y * 5) % 7 < 2)
-                l.SetArt(x, y, Lerp(head, stripes, 0.55));
+        // Затылок: волнистые тёмные полоски (как «зебра» у волнистых), чётные строки со сдвигом
+        for (int y = 2; y <= 13; y += 2)
+        for (int x = 15; x <= 22; x++)
+            if (l.GetArt(x, y) is not null && (x + (y / 2) % 2 * 2) % 4 != 3)
+                l.SetArt(x, y, Lerp(head, stripes, 0.6));
 
-        // Щёчное пятно под глазом и три точки на горле
-        foreach (var (x, y) in new[] { (9, 12), (10, 12), (10, 13), (11, 13) }) l.SetArt(x, y, cheek);
-        foreach (int x in new[] { 6, 9, 12 }) l.SetArt(x, 16, cheek2);
+        // Щёчное пятно (сине-фиолетовое, овал) и три чёрные точки на горле
+        foreach (var (x, y) in new[] { (7, 11), (8, 11), (6, 12), (7, 12), (8, 12), (9, 12), (6, 13), (7, 13), (8, 13), (9, 13), (7, 14), (8, 14) })
+            l.SetArt(x, y, cheek);
+        l.SetArt(7, 12, Lerp(cheek, cheek2, 0.55)); // мягкий блик на пятне
+        var spot = Darken(stripes, 0.7);
+        foreach (int sx in new[] { 5, 9, 13 })
+        {
+            l.SetArt(sx, 17, spot);
+            l.SetArt(sx + 1, 17, spot);
+            l.SetArt(sx, 18, spot);
+            l.SetArt(sx + 1, 18, spot);
+        }
 
-        // Крошечный клюв крючком и восковица над ним
-        var beakShade = Darken(beak, 0.82);
-        foreach (var (x, y) in new[] { (1, 9), (2, 9), (3, 9), (0, 10), (1, 10), (2, 10), (3, 10),
-                                       (0, 11), (1, 11), (2, 11), (3, 11), (1, 12), (2, 12), (3, 12), (2, 13) })
+        // Верхний клюв: коротким крючком, нижний — отдельным слоем; восковица над ним с ноздрёй
+        var beakShade = Darken(beak, 0.85);
+        foreach (var (x, y) in new[] { (1, 9), (2, 9), (3, 9), (4, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10),
+                                       (0, 11), (1, 11), (2, 11), (3, 11), (1, 12), (2, 12) })
             l.SetArt(x, y, y >= 11 ? beakShade : beak);
-        foreach (var (x, y) in new[] { (2, 7), (3, 7), (2, 8), (3, 8) }) l.SetArt(x, y, cere);
+        foreach (var (x, y) in new[] { (1, 6), (2, 6), (3, 6), (4, 6), (1, 7), (2, 7), (3, 7), (4, 7), (2, 8), (3, 8), (4, 8) })
+            l.SetArt(x, y, cere);
+        l.SetArt(2, 7, Darken(cere, 0.6)); // ноздря
 
         // Контур не рисуем там, где под головой тело или крыло: так голова «врастает» в тело
         l.Outline(skip: (ix, iy) => bodyLayer.Has(ix, iy) || wingLayer.Has(ix, iy));
+        return l;
+    }
+
+    // ---- Нижняя половина клюва: поворачивается вокруг шарнира (арт-точка 4.5, 12) при открывании
+    private static Layer BuildBeak(Color beak)
+    {
+        var l = new Layer();
+        var shade = Darken(beak, 0.78);
+        foreach (var (x, y) in new[] { (3, 12), (4, 12), (2, 13), (3, 13), (4, 13), (3, 14) })
+            l.SetArt(x, y, shade);
+        l.SetArt(4, 12, Color.FromRgb(0xE0, 0x6A, 0x7A)); // язычок
         return l;
     }
 

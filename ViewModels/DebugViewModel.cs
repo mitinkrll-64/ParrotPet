@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using System.Windows.Threading;
 using ParrotPet.Models;
 using ParrotPet.Services;
 
 namespace ParrotPet.ViewModels;
+
+/// <summary>Кнопка Debug-окна для запуска одного действия в покое.</summary>
+public record IdleActionItem(string Title, ICommand Command);
 
 /// <summary>ViewModel окна разработчика: ручной запуск анимаций, правка профиля, тестовые действия.</summary>
 public class DebugViewModel : ViewModelBase, IDisposable
@@ -23,9 +27,20 @@ public class DebugViewModel : ViewModelBase, IDisposable
 
         // Анимации: каждая команда безопасно прерывает текущее действие FSM
         PlayIdle = new RelayCommand(main.PlayIdle);
+        IdleActions = new[]
+        {
+            Item("Чистка крыла", IdleAction.PreenWing), Item("Чистка груди", IdleAction.PreenChest),
+            Item("Чистка хвоста", IdleAction.PreenTail), Item("Встряхнуться", IdleAction.Fluff),
+            Item("Потянуться", IdleAction.Stretch), Item("Зевок", IdleAction.Yawn),
+            Item("Скрип клювом", IdleAction.BeakGrind), Item("Дрёма", IdleAction.Doze),
+            Item("Чириканье", IdleAction.Chirp), Item("Вильнуть хвостом", IdleAction.TailWag),
+            Item("Осмотреться", IdleAction.LookAround)
+        };
         PlayWalkLeft = new RelayCommand(() => main.PlayWalk(-1));
         PlayWalkRight = new RelayCommand(() => main.PlayWalk(1));
         PlayFly = new RelayCommand(main.PlayFly);
+        PlayFlyTop = new RelayCommand(main.PlayFlyToWindowTop);
+        PlayCling = new RelayCommand(main.PlayFlyToWindowSide);
         PlayFall = new RelayCommand(main.PlayFall);
         PlayEat = new RelayCommand(main.PlayEat);
         PlayPreen = new RelayCommand(main.PlayPreen);
@@ -46,10 +61,18 @@ public class DebugViewModel : ViewModelBase, IDisposable
         _stateTimer.Start();
     }
 
+    /// <summary>Кнопки запуска отдельных действий в покое.</summary>
+    public IReadOnlyList<IdleActionItem> IdleActions { get; }
+
     public ICommand PlayIdle { get; }
     public ICommand PlayWalkLeft { get; }
     public ICommand PlayWalkRight { get; }
     public ICommand PlayFly { get; }
+    private IdleActionItem Item(string title, IdleAction action) =>
+        new(title, new RelayCommand(() => _main.PlayIdleAction(action)));
+
+    public ICommand PlayFlyTop { get; }
+    public ICommand PlayCling { get; }
     public ICommand PlayFall { get; }
     public ICommand PlayEat { get; }
     public ICommand PlayPreen { get; }
@@ -125,7 +148,9 @@ public class DebugViewModel : ViewModelBase, IDisposable
     }
 
     public string CurrentState => $"Состояние: {_main.Movement.State}"
-        + (_main.Movement.State == PetBehaviorState.Fly ? $" / {_main.Movement.Phase}" : "");
+        + (_main.Movement.State == PetBehaviorState.Fly ? $" / {_main.Movement.Phase} → {_main.Movement.FlyTarget}" : "")
+        + (_main.Movement.IsPerched ? " (на окне)" : "")
+        + (_main.Animator.CurrentIdleAction != IdleAction.None ? $" · {_main.Animator.CurrentIdleAction}" : "");
 
     /// <summary>Профиль изменился (в том числе из другого места) — обновляем все поля.</summary>
     private void OnProfileChanged()

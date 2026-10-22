@@ -14,5 +14,7 @@ public enum PetBehaviorState
     /// <summary>Удерживается мышью.</summary>
     Dragged,
     /// <summary>Клюёт корм (несколько наклонов вниз).</summary>
-    Eat
+    Eat,
+    /// <summary>Держится лапками за боковую кромку окна, голова вверх.</summary>
+    Cling
 }

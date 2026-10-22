@@ -108,9 +108,12 @@ public class SkinService
         var resources = (Application.Current ?? throw new InvalidOperationException("Нет Application")).Resources;
         var images = PixelSpriteBuilder.Build(Active, _profile.Gender);
         resources["Skin.TailImage"] = images.Tail;
+        resources["Skin.FarFootImage"] = images.FarFoot;
         resources["Skin.BodyImage"] = images.Body;
+        resources["Skin.FootImage"] = images.Foot;
         resources["Skin.WingImage"] = images.Wing;
         resources["Skin.HeadImage"] = images.Head;
+        resources["Skin.BeakImage"] = images.Beak;
         _gender = _profile.Gender;
     }
 

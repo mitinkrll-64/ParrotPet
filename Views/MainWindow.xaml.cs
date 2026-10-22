@@ -87,6 +87,8 @@ public partial class MainWindow : Window
         Top = m.Y - m.Pad;
 
         var pose = ViewModel.Animator.Pose;
+        PoseOffset.X = pose.OffsetX;
+        PoseOffset.Y = pose.OffsetY;
         PoseScale.ScaleX = pose.ScaleX;
         PoseScale.ScaleY = pose.ScaleY;
         PoseRotate.Angle = pose.Rotation;
@@ -96,6 +98,14 @@ public partial class MainWindow : Window
         WingScale.ScaleY = pose.WingScaleY;
         WingRot.Angle = pose.WingRotation;
         TailRot.Angle = pose.TailRotation;
+        FootRot.Angle = pose.FootRotation;
+        double nearTuck = Math.Max(pose.FootTuck, pose.LegsTuck);  // подобранная лапка прячется в перья
+        FootTuckScale.ScaleY = 1 - 0.85 * nearTuck;
+        FootContainer.Opacity = 1 - nearTuck;
+        FarFootRot.Angle = pose.FarFootRotation;
+        FarFootTuckScale.ScaleY = 1 - 0.85 * pose.LegsTuck;
+        FarFootContainer.Opacity = 1 - pose.LegsTuck;
+        BeakRot.Angle = pose.BeakOpen;
         BreathScale.ScaleY = pose.Breath;
         BreathScale.ScaleX = 1 + (pose.Breath - 1) * 0.5;
         EyeScale.ScaleY = Math.Max(0.05, pose.EyeOpen);

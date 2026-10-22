@@ -1,12 +1,10 @@
 ﻿namespace ParrotPet.Models;
 
-/// <summary>Фазы полёта внутри состояния Fly.</summary>
+/// <summary>Фазы полёта внутри состояния Fly. Зависания нет: попугай летит сразу к точке посадки.</summary>
 public enum FlightPhase
 {
-    /// <summary>Перелёт к цели по дуге.</summary>
+    /// <summary>Набор высоты и перелёт по дуге.</summary>
     Cruise,
-    /// <summary>Зависание на месте.</summary>
-    Hover,
-    /// <summary>Плавное планирование вниз до панели задач.</summary>
-    Descend
+    /// <summary>Заход на посадку: торможение крыльями, нос вверх.</summary>
+    Approach
 }

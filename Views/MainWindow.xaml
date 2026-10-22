@@ -44,7 +44,8 @@
             <Canvas Width="96" Height="96" ClipToBounds="False" RenderTransformOrigin="0.5,0.8333">
                 <Canvas.RenderTransform>
                     <TransformGroup>
-                        <!-- Порядок важен: сначала сжатие/растяжение, затем наклон, затем разворот -->
+                        <!-- Порядок важен: сначала сдвиг (подскок, подтягивание), затем сжатие/растяжение, наклон и разворот -->
+                        <TranslateTransform x:Name="PoseOffset" X="0" Y="0"/>
                         <ScaleTransform x:Name="PoseScale" ScaleX="1" ScaleY="1"/>
                         <RotateTransform x:Name="PoseRotate" Angle="0"/>
                         <!-- ScaleX = 1 вправо, -1 влево -->
@@ -67,12 +68,34 @@
                         <Image Source="{DynamicResource Skin.TailImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
                     </Canvas>
 
-                    <!-- Тело с лапками (дыхание масштабирует грудку от низа) -->
+                    <!-- Дальняя лапка: за телом, чтобы пух живота прикрывал бедро -->
+                    <Canvas x:Name="FarFootContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FarFootTuckScale" CenterX="41.5" CenterY="55.5"/>
+                                <RotateTransform x:Name="FarFootRot" CenterX="41.5" CenterY="55.5"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FarFootImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <!-- Тело (дыхание масштабирует грудку от низа) -->
                     <Canvas x:Name="BodyContainer">
                         <Canvas.RenderTransform>
                             <ScaleTransform x:Name="BreathScale" CenterX="43" CenterY="56"/>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.BodyImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                    </Canvas>
+
+                    <!-- Ближняя лапка: поворот вокруг бедра (потягивание, подъём) и «подбирание» в перья -->
+                    <Canvas x:Name="FootContainer">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="FootTuckScale" CenterX="35.5" CenterY="55.5"/>
+                                <RotateTransform x:Name="FootRot" CenterX="35.5" CenterY="55.5"/>
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Image Source="{DynamicResource Skin.FootImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
                     </Canvas>
 
                     <!-- Крыло: взмах — масштаб по Y и поворот вокруг плеча -->
@@ -93,13 +116,24 @@
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.HeadImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
 
-                        <!-- Глаз: два пикселя на два, блик; моргание масштабирует по Y -->
+                        <!-- Нижняя половина клюва: шарнир у основания, открывается при зевке, пении и скрипе клювом -->
                         <Canvas>
                             <Canvas.RenderTransform>
-                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="31.5"/>
+                                <RotateTransform x:Name="BeakRot" CenterX="58.5" CenterY="34"/>
                             </Canvas.RenderTransform>
-                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="2" Height="3" Fill="#1B1B1F"/>
-                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
+                            <Image Source="{DynamicResource Skin.BeakImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
+                        </Canvas>
+
+                        <!-- Глаз: крупный (3x4), два блика; моргание и «сонный» прищур масштабируют по Y -->
+                        <Canvas>
+                            <Canvas.RenderTransform>
+                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="30"/>
+                            </Canvas.RenderTransform>
+                            <!-- Круглый глаз 4x4 (крест из двух прямоугольников), блик спереди-сверху и второй снизу -->
+                            <Rectangle Canvas.Left="51" Canvas.Top="28" Width="2" Height="4" Fill="#15151A"/>
+                            <Rectangle Canvas.Left="50" Canvas.Top="29" Width="4" Height="2" Fill="#15151A"/>
+                            <Rectangle Canvas.Left="52" Canvas.Top="29" Width="1" Height="1" Fill="White"/>
+                            <Rectangle Canvas.Left="51" Canvas.Top="31" Width="1" Height="1" Fill="#8FA0B3"/>
                         </Canvas>
                     </Canvas>
                 </Canvas>

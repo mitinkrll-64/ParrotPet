@@ -32,7 +32,7 @@ public class MainViewModel
         _settings = settings;
         Profile = profile;
         Food = new FoodService(screens, settings.Current);
-        Movement = new MovementService(screens, settings.Current, Food);
+        Movement = new MovementService(screens, settings.Current, Food, new WindowSurfaceService());
         Behavior = new BehaviorController(Movement);
 
         Movement.Landed += Animator.TriggerLand;
@@ -100,6 +100,22 @@ public class MainViewModel
         Behavior.Reschedule();
     }
 
+    /// <summary>Перелёт на верхнюю кромку случайного окна (если окон нет — на панель задач).</summary>
+    public void PlayFlyToWindowTop()
+    {
+        Movement.Interrupt();
+        Movement.StartFly(LandingKind.WindowTop);
+        Behavior.Reschedule();
+    }
+
+    /// <summary>Перелёт к боковой кромке случайного окна: там попугай виснет, затем залезает наверх или срывается.</summary>
+    public void PlayFlyToWindowSide()
+    {
+        Movement.Interrupt();
+        Movement.StartFly(LandingKind.WindowSide);
+        Behavior.Reschedule();
+    }
+
     public void PlayFall()
     {
         Movement.ForceFall();
@@ -119,6 +135,15 @@ public class MainViewModel
     {
         Movement.Interrupt();
         Animator.RequestPreen();
+        Behavior.Reschedule();
+    }
+
+    /// <summary>Действие в покое (чистка, зевок, дрёма...): попугай садится и тут же его выполняет.</summary>
+    public void PlayIdleAction(IdleAction action)
+    {
+        Food.Cancel();
+        Movement.Interrupt();
+        Animator.RequestIdle(action);
         Behavior.Reschedule();
     }
 
