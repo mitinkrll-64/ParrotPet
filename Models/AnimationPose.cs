@@ -23,7 +23,9 @@ public readonly record struct AnimationPose(
     double FootTuck = 0,       // 0 — лапка стоит, 1 — подобрана в перья (отдых на одной ноге)
     double BeakOpen = 0,       // угол открытия нижней половины клюва, градусы
     double FarFootRotation = 0, // поворот дальней лапки (при ходьбе — в противофазе к ближней)
-    double LegsTuck = 0)       // 0 — обе лапки стоят, 1 — обе подобраны (полёт)
+    double LegsTuck = 0,       // 0 — обе лапки стоят, 1 — обе подобраны (полёт)
+    double HeadOffsetX = 0,    // сдвиг головы вдоль взгляда (шея вытягивается вперёд, + / втягивается назад, −)
+    double HeadOffsetY = 0)    // сдвиг головы вниз (+) или вверх (−)
 {
     // Не new(): у record struct это обнулило бы все поля, включая масштаб, и птица была бы невидима
     public static AnimationPose Neutral => new(Rotation: 0);
@@ -39,6 +41,7 @@ public readonly record struct AnimationPose(
             L(a.Breath, b.Breath, t), b.EyeOpen, b.Heart,
             L(a.OffsetX, b.OffsetX, t), L(a.OffsetY, b.OffsetY, t),
             L(a.FootRotation, b.FootRotation, t), L(a.FootTuck, b.FootTuck, t), L(a.BeakOpen, b.BeakOpen, t),
-            L(a.FarFootRotation, b.FarFootRotation, t), L(a.LegsTuck, b.LegsTuck, t));
+            L(a.FarFootRotation, b.FarFootRotation, t), L(a.LegsTuck, b.LegsTuck, t),
+            L(a.HeadOffsetX, b.HeadOffsetX, t), L(a.HeadOffsetY, b.HeadOffsetY, t));
     }
 }

@@ -95,6 +95,8 @@ public partial class MainWindow : Window
         ParrotFlip.ScaleX = m.FacingScale;
 
         HeadRot.Angle = pose.HeadRotation;
+        HeadMove.X = pose.HeadOffsetX;
+        HeadMove.Y = pose.HeadOffsetY;
         WingScale.ScaleY = pose.WingScaleY;
         WingRot.Angle = pose.WingRotation;
         TailRot.Angle = pose.TailRotation;

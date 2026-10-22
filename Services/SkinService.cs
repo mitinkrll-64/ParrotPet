@@ -46,7 +46,7 @@ public class SkinService
         {
             Id = "violet-opaline", DisplayName = "Фиолетовый опалин",
             ColorBody = "#C9B8F0", ColorBodyShade = "#A58FDB", ColorHead = "#FFFFFF", ColorStripes = "#B3A3DE",
-            ColorWing = "#9A86D4", ColorWingStripes = "#7A66B8", ColorBeak = "#F0B94F",
+            ColorWing = "#B3A3E6", ColorWingStripes = "#8E7CCB", ColorBeak = "#F0B94F",
             ColorCheeks = "#8E7AD8", ColorCheeks2 = "#B7A8EC",
             ColorTail1 = "#8E7AD0", ColorTail2 = "#B2A2E8", ColorTail3 = "#D2C8F5", ColorFeet = "#E6B26B"
         },

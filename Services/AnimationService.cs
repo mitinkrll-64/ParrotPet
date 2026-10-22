@@ -31,6 +31,7 @@ public class AnimationService
     private IdleAction _action = IdleAction.None, _lastAction = IdleAction.None;
     private IdleAction _requested = IdleAction.None;
     private double _actionTime, _actionDur, _nextAction;
+    private bool _chainTailWag;
     private double _eyeGoal = 1, _eyeCur = 1;
     private double _heartTime = -1;
     private double _landTime = 99, _landAmplitude;
@@ -183,7 +184,7 @@ public class AnimationService
     // Таблица действий в покое: вес при случайном выборе и длительность, секунд
     private static readonly (IdleAction Action, double Weight, double Duration)[] IdleTable =
     {
-        (IdleAction.PreenWing, 3, 5.5), (IdleAction.PreenChest, 2, 4.5), (IdleAction.PreenTail, 1, 4.5),
+        (IdleAction.PreenWing, 3, 6.4), (IdleAction.PreenChest, 2, 4.8), (IdleAction.PreenTail, 1, 5.6),
         (IdleAction.Fluff, 2, 1.8), (IdleAction.Stretch, 2, 3.4), (IdleAction.Yawn, 1.5, 2.4),
         (IdleAction.BeakGrind, 1.5, 5), (IdleAction.Doze, 1, 9), (IdleAction.Chirp, 2, 2.6),
         (IdleAction.TailWag, 1, 1.4), (IdleAction.LookAround, 3, 3.2)
@@ -238,12 +239,30 @@ public class AnimationService
         _actionTime += dt;
         if (_actionTime >= _actionDur)
         {
+            var finished = _action;
             _action = IdleAction.None;
             _nextAction = Range(3, 7);
+            // Как у настоящих птиц: закончив чистку, пушится и встряхивается, а потом иногда подёргивает хвостом
+            if (finished is IdleAction.PreenWing or IdleAction.PreenChest or IdleAction.PreenTail)
+            {
+                StartAction(IdleAction.Fluff);
+                _chainTailWag = _random.Next(2) == 0;
+            }
+            else if (finished == IdleAction.Fluff && _chainTailWag)
+            {
+                _chainTailWag = false;
+                StartAction(IdleAction.TailWag);
+            }
+            else
+            {
+                _chainTailWag = false;
+            }
             return rest;
         }
 
-        double env = Smooth(_actionTime / 0.4) * Smooth((_actionDur - _actionTime) / 0.4);
+        // Чистка входит и выходит медленнее: голова плавно «ныряет» к плечу, а не перескакивает
+        double ramp = _action is IdleAction.PreenWing or IdleAction.PreenChest or IdleAction.PreenTail ? 0.8 : 0.4;
+        double env = Smooth(_actionTime / ramp) * Smooth((_actionDur - _actionTime) / ramp);
         var full = ActionPose(_action, _actionTime, _actionDur, rest, out double eyeGoal);
         _eyeGoal = Mix(1, eyeGoal, env);
         return AnimationPose.Lerp(rest, full, env);
@@ -272,6 +291,18 @@ public class AnimationService
     private static double Bump(double t, double a, double b, double c, double d) =>
         Smooth((t - a) / (b - a)) * (1 - Smooth((t - c) / (d - c)));
 
+    /// <summary>
+    /// Одна «протяжка» при чистке: 0→1 плавно за 78% периода (клюв ведёт по перу от основания к кончику),
+    /// затем быстрый возврат к началу. stroke — номер протяжки, active — идёт ли сама протяжка (клюв перебирает).
+    /// </summary>
+    private static double PreenPull(double t, double period, out int stroke, out bool active)
+    {
+        stroke = (int)(t / period);
+        double u = t % period / period;
+        active = u < 0.78;
+        return active ? Smooth(u / 0.78) : 1 - Smooth((u - 0.78) / 0.22);
+    }
+
     /// <summary>Поза «на пике» действия; плавный вход и выход накладывает вызывающий код.</summary>
     private AnimationPose ActionPose(IdleAction action, double t, double dur, AnimationPose rest, out double eyeGoal)
     {
@@ -283,40 +314,55 @@ public class AnimationService
         {
             case IdleAction.PreenWing:
             {
-                // Голова заворачивается назад поверх спинки; клюв перебирает перья, медленно скользя вдоль крыла
-                double slide = 0.5 + 0.5 * Math.Sin(pi2 * 0.36 * t);
-                nibble = Math.Max(0, Math.Sin(pi2 * 4.2 * t));
+                // Птица ныряет головой к плечу: голова ложится поверх крыла, шея не выворачивается.
+                // Серия «протяжек»: клюв берёт перо у основания и ведёт к кончику (голова скользит назад
+                // вдоль крыла), потом быстро возвращается к следующему перу; крыло приподнимается навстречу.
+                double pull = PreenPull(t, 1.4, out int stroke, out bool active);
+                nibble = active ? Math.Abs(Math.Sin(pi2 * 2.2 * t)) : 0;
+                double drift = Math.Min(stroke, 3) * 1.5;   // каждая следующая протяжка чуть дальше
+                eyeGoal = 0.8;
                 return rest with
                 {
-                    Rotation = 2, HeadRotation = -(58 + 34 * slide) + 7 * Math.Sin(pi2 * 4.2 * t),
-                    WingRotation = 9 + 3 * Math.Sin(pi2 * 2.1 * t), WingScaleY = 1.08,
-                    BeakOpen = 3 + 8 * nibble, TailRotation = 4 * Math.Sin(pi2 * 0.8 * t)
+                    Rotation = 4 + pull,
+                    HeadRotation = 112 + 5 * pull + 2 * nibble,
+                    HeadOffsetX = -9 - drift - 4 * pull, HeadOffsetY = -6 - 1.5 * pull,
+                    WingRotation = -4 - 5 * pull, WingScaleY = 1.04 + 0.04 * pull,
+                    BeakOpen = 2 + 6 * nibble, TailRotation = 2 * Math.Sin(pi2 * 0.7 * t)
                 };
             }
 
             case IdleAction.PreenChest:
             {
-                // Голова опускается к груди, клюв легко перебирает пух
-                nibble = Math.Max(0, Math.Sin(pi2 * 4 * t));
+                // Поклон: голова опускается к груди, клюв ведёт по пуху сверху вниз, мелко перебирая
+                double pull = PreenPull(t, 1.5, out _, out bool active);
+                nibble = active ? Math.Abs(Math.Sin(pi2 * 2.2 * t)) : 0;
+                eyeGoal = 0.85;
                 return rest with
                 {
-                    Rotation = 6, HeadRotation = 40 + 8 * Math.Sin(pi2 * 1.3 * t) + 4 * Math.Sin(pi2 * 4 * t),
-                    BeakOpen = 3 + 7 * nibble, Breath = 1.05
+                    Rotation = 4 + 2 * pull, Breath = 1.04,
+                    HeadRotation = 58 + 9 * pull + 2 * nibble,
+                    HeadOffsetX = -pull, HeadOffsetY = 1.5 + 1.5 * pull,
+                    BeakOpen = 2 + 6 * nibble
                 };
             }
 
             case IdleAction.PreenTail:
             {
-                // Хвост поднят, корпус подаётся вперёд, голова тянется назад к огузку
-                nibble = Math.Max(0, Math.Sin(pi2 * 4 * t));
+                // Масло копчиковой железы у основания хвоста: хвост приподнят, корпус подан вперёд,
+                // голова ложится на спинку и тянется к хвосту короткими протяжками
+                double pull = PreenPull(t, 1.7, out _, out bool active);
+                nibble = active ? Math.Abs(Math.Sin(pi2 * 2.2 * t)) : 0;
+                eyeGoal = 0.8;
                 return rest with
                 {
-                    Rotation = 13, HeadRotation = -(88 + 14 * Math.Sin(pi2 * 0.5 * t)) + 5 * Math.Sin(pi2 * 4 * t),
-                    TailRotation = 42 + 5 * Math.Sin(pi2 * 1.4 * t), WingRotation = 14, WingScaleY = 1.06,
-                    BeakOpen = 3 + 7 * nibble, FootRotation = 6
+                    Rotation = 8,
+                    HeadRotation = 125 + 4 * pull + 2 * nibble,
+                    HeadOffsetX = -17 - 3 * pull, HeadOffsetY = -7,
+                    TailRotation = 20 + 4 * pull + (active ? 2.5 * Math.Sin(pi2 * 2.6 * t) : 0),
+                    WingRotation = -8 - 4 * pull, WingScaleY = 1.05,
+                    BeakOpen = 2 + 6 * nibble, FootRotation = 4
                 };
             }
-
             case IdleAction.Fluff:
             {
                 // Взъерошился -> дрожь всем телом -> перья улеглись

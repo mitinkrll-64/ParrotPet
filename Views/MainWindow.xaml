@@ -112,7 +112,11 @@
                     <!-- Голова вместе с глазом: поворот вокруг шеи -->
                     <Canvas x:Name="HeadContainer">
                         <Canvas.RenderTransform>
-                            <RotateTransform x:Name="HeadRot" CenterX="48" CenterY="41"/>
+                            <TransformGroup>
+                                <!-- Сначала поворот вокруг шеи, затем сдвиг (шея тянется или втягивается) -->
+                                <RotateTransform x:Name="HeadRot" CenterX="48" CenterY="41"/>
+                                <TranslateTransform x:Name="HeadMove" X="0" Y="0"/>
+                            </TransformGroup>
                         </Canvas.RenderTransform>
                         <Image Source="{DynamicResource Skin.HeadImage}" Canvas.Left="-16" Canvas.Top="-16" Width="96" Height="96" Stretch="Fill"/>
 
@@ -127,13 +131,11 @@
                         <!-- Глаз: крупный (3x4), два блика; моргание и «сонный» прищур масштабируют по Y -->
                         <Canvas>
                             <Canvas.RenderTransform>
-                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="30"/>
+                                <ScaleTransform x:Name="EyeScale" CenterX="52" CenterY="31.5"/>
                             </Canvas.RenderTransform>
-                            <!-- Круглый глаз 4x4 (крест из двух прямоугольников), блик спереди-сверху и второй снизу -->
-                            <Rectangle Canvas.Left="51" Canvas.Top="28" Width="2" Height="4" Fill="#15151A"/>
-                            <Rectangle Canvas.Left="50" Canvas.Top="29" Width="4" Height="2" Fill="#15151A"/>
-                            <Rectangle Canvas.Left="52" Canvas.Top="29" Width="1" Height="1" Fill="White"/>
-                            <Rectangle Canvas.Left="51" Canvas.Top="31" Width="1" Height="1" Fill="#8FA0B3"/>
+                            <!-- Глаз как на референсе: чёрный овал 2x3, один блик сзади-сверху -->
+                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="2" Height="3" Fill="#15151A"/>
+                            <Rectangle Canvas.Left="51" Canvas.Top="30" Width="1" Height="1" Fill="White"/>
                         </Canvas>
                     </Canvas>
                 </Canvas>
